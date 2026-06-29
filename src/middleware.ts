@@ -5,8 +5,16 @@ import { updateSession } from "@/lib/supabase/middleware";
  * Middleware — runs on every request.
  *
  * 1. Refreshes the Supabase auth session (cookies)
- * 2. Protects /dashboard/* and /api/* routes (redirects to /login if unauthenticated)
- * 3. Allows public routes: marketing pages, /login, /signup, OAuth callback
+ * 2. Allows public routes through
+ * 3. Does NOT do auth checks here — that's handled by requireUser() in the
+ *    layout/route. Why? Because @supabase/ssr uses chunked cookies with
+ *    dynamic names (sb-<project-ref>-auth-token.0, .1, ...), so checking
+ *    for a specific cookie name is unreliable.
+ *
+ * Public routes: marketing pages, login, signup, webhooks, health, cron
+ * Protected routes: /dashboard, /settings, /api/* (except public ones)
+ *    — these call requireUser() which uses supabase.auth.getUser()
+ *    — the server-side Supabase client reads all chunked cookies correctly
  */
 
 const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/pricing", "/about", "/blog"];
@@ -25,7 +33,7 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  // Always refresh the Supabase session first
+  // Refresh the Supabase session (handles chunked cookies correctly)
   const response = await updateSession(request);
 
   const { pathname } = request.nextUrl;
@@ -35,15 +43,14 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Check if user is authenticated (session cookie present)
-  // The actual session validation happens in `requireUser()` on each route,
-  // but we do a quick check here to redirect early.
-  const authCookie = request.cookies.get("sb-access-token");
-  if (!authCookie && (pathname.startsWith("/dashboard") || pathname.startsWith("/settings"))) {
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // For protected routes, we do NOT check auth here.
+  // The layout's requireUser() handles it properly using supabase.auth.getUser(),
+  // which reads all chunked cookies. If unauthorized, it redirects to /login.
+  //
+  // Why not check here? Because @supabase/ssr stores the session in chunked
+  // cookies with names like sb-<ref>-auth-token.0, .1, etc. Manually checking
+  // for "sb-access-token" (the old non-SSR name) always returns undefined,
+  // causing a false redirect to /login even when the user IS authenticated.
 
   return response;
 }
