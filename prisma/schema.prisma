@@ -130,12 +130,12 @@ model User {
   id            String    @id @default(uuid()) @db.Uuid
   email         String    @unique
   name          String?
-  avatarUrl     String?
+  avatarUrl     String?   @map("avatar_url")
   locale        String    @default("en")
-  emailVerified DateTime?
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  emailVerified DateTime? @map("email_verified")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   memberships   Membership[]
   apiKeys       ApiKey[]
@@ -148,14 +148,14 @@ model User {
 }
 
 model Organization {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
   name         String
-  slug         String   @unique
-  logoUrl      String?
-  billingEmail String?
-  trialEndsAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  slug         String    @unique
+  logoUrl      String?   @map("logo_url")
+  billingEmail String?   @map("billing_email")
+  trialEndsAt  DateTime? @map("trial_ends_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   memberships      Membership[]
   invitations      Invitation[]
@@ -177,15 +177,15 @@ model Organization {
 
 model Membership {
   id             String           @id @default(uuid()) @db.Uuid
-  userId         String           @db.Uuid
-  organizationId String           @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
   role           RoleName         @default(MEMBER)
   status         MembershipStatus @default(ACTIVE)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
 
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
   @@index([organizationId, role])
@@ -193,17 +193,17 @@ model Membership {
 }
 
 model Invitation {
-  id             String       @id @default(uuid()) @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
   email          String
-  organizationId String       @db.Uuid
-  role           RoleName     @default(MEMBER)
-  token          String       @unique @default(uuid())
-  invitedById    String       @db.Uuid
-  expiresAt      DateTime
-  acceptedAt     DateTime?
-  createdAt      DateTime     @default(now())
+  organizationId String    @map("organization_id") @db.Uuid
+  role           RoleName  @default(MEMBER)
+  token          String    @unique @default(uuid())
+  invitedById    String    @map("invited_by_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at")
+  acceptedAt     DateTime? @map("accepted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([email, organizationId])
   @@map("invitations")
@@ -224,11 +224,11 @@ model Permission {
 }
 
 model RolePermission {
-  id           String     @id @default(uuid()) @db.Uuid
-  permissionId String     @db.Uuid
+  id           String   @id @default(uuid()) @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
   role         RoleName
 
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([role, permissionId])
   @@map("role_permissions")
@@ -239,35 +239,35 @@ model RolePermission {
 // =============================================================================
 
 model Agent {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
   name           String
   description    String?
-  systemPrompt   String?      @db.Text
-  modelConfigId  String?      @db.Uuid
-  status         AgentStatus  @default(DRAFT)
-  temperature    Float        @default(0.7)
-  maxTokens      Int          @default(4096)
+  systemPrompt   String?     @map("system_prompt") @db.Text
+  modelConfigId  String?     @map("model_config_id") @db.Uuid
+  status         AgentStatus @default(DRAFT)
+  temperature    Float       @default(0.7)
+  maxTokens      Int         @default(4096) @map("max_tokens")
   metadata       Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  modelConfig    ModelConfig?   @relation(fields: [modelConfigId], references: [id])
-  conversations  Conversation[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  modelConfig   ModelConfig?   @relation(fields: [modelConfigId], references: [id])
+  conversations Conversation[]
 
   @@index([organizationId, status])
   @@map("agents")
 }
 
 model ModelConfig {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   provider        String // "openai" | "anthropic" | "cohere" | "mistral"
-  modelName       String // "gpt-4o" | "claude-3-5-sonnet" | etc.
-  displayName     String
-  contextWindow   Int
-  inputCostPer1K  Float // USD per 1K input tokens
-  outputCostPer1K Float // USD per 1K output tokens
+  modelName       String       @map("model_name") // "gpt-4o" | "claude-3-5-sonnet" | etc.
+  displayName     String       @map("display_name")
+  contextWindow   Int          @map("context_window")
+  inputCostPer1K  Float        @map("input_cost_per1_k") // USD per 1K input tokens
+  outputCostPer1K Float        @map("output_cost_per1_k") // USD per 1K output tokens
   capabilities    Json?
   agents          Agent[]
   tokenUsage      TokenUsage[]
@@ -278,22 +278,22 @@ model ModelConfig {
 }
 
 model Conversation {
-  id                String             @id @default(uuid()) @db.Uuid
-  organizationId    String             @db.Uuid
-  agentId           String?            @db.Uuid
-  userId            String?            @db.Uuid
-  title             String?
-  status            ConversationStatus @default(ACTIVE)
-  tokenCount        Int                @default(0)
-  estimatedCostUsd  Float              @default(0)
-  metadata          Json?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id               String             @id @default(uuid()) @db.Uuid
+  organizationId   String             @map("organization_id") @db.Uuid
+  agentId          String?            @map("agent_id") @db.Uuid
+  userId           String?            @map("user_id") @db.Uuid
+  title            String?
+  status           ConversationStatus @default(ACTIVE)
+  tokenCount       Int                @default(0) @map("token_count")
+  estimatedCostUsd Float              @default(0) @map("estimated_cost_usd")
+  metadata         Json?
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
 
-  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  agent             Agent?             @relation(fields: [agentId], references: [id])
-  user              User?              @relation(fields: [userId], references: [id])
-  messages          Message[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent        Agent?       @relation(fields: [agentId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id])
+  messages     Message[]
 
   @@index([organizationId, userId])
   @@index([organizationId, status])
@@ -301,18 +301,18 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id @default(uuid()) @db.Uuid
-  conversationId String       @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
+  conversationId String      @map("conversation_id") @db.Uuid
   role           MessageRole
-  content        String       @db.Text
-  tokenCount     Int          @default(0)
-  modelConfigId  String?      @db.Uuid
-  toolCalls      Json?
+  content        String      @db.Text
+  tokenCount     Int         @default(0) @map("token_count")
+  modelConfigId  String?     @map("model_config_id") @db.Uuid
+  toolCalls      Json?       @map("tool_calls")
   metadata       Json?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime    @default(now()) @map("created_at")
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  modelConfig    ModelConfig? @relation(fields: [modelConfigId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  modelConfig  ModelConfig? @relation(fields: [modelConfigId], references: [id])
 
   @@index([conversationId, createdAt])
   @@map("messages")
@@ -323,16 +323,16 @@ model Message {
 // =============================================================================
 
 model KnowledgeBase {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
   name           String
   description    String?
-  embeddingModel String       @default("text-embedding-3-small")
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  embeddingModel String   @default("text-embedding-3-small") @map("embedding_model")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  documents      Document[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents    Document[]
 
   @@index([organizationId])
   @@map("knowledge_bases")
@@ -340,35 +340,35 @@ model KnowledgeBase {
 
 model Document {
   id              String         @id @default(uuid()) @db.Uuid
-  knowledgeBaseId String         @db.Uuid
-  fileAssetId     String?        @unique @db.Uuid
+  knowledgeBaseId String         @map("knowledge_base_id") @db.Uuid
+  fileAssetId     String?        @unique @map("file_asset_id") @db.Uuid
   title           String
-  sourceUrl       String?
+  sourceUrl       String?        @map("source_url")
   status          DocumentStatus @default(PENDING)
-  chunkCount      Int            @default(0)
-  charCount       Int            @default(0)
+  chunkCount      Int            @default(0) @map("chunk_count")
+  charCount       Int            @default(0) @map("char_count")
   metadata        Json?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
 
-  knowledgeBase   KnowledgeBase  @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
-  fileAsset       FileAsset?     @relation(fields: [fileAssetId], references: [id])
-  embeddings      Embedding[]
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  fileAsset     FileAsset?    @relation(fields: [fileAssetId], references: [id])
+  embeddings    Embedding[]
 
   @@index([knowledgeBaseId, status])
   @@map("documents")
 }
 
 model Embedding {
-  id         String   @id @default(uuid()) @db.Uuid
-  documentId String   @db.Uuid
-  chunkIndex Int
-  content    String   @db.Text
+  id         String                      @id @default(uuid()) @db.Uuid
+  documentId String                      @map("document_id") @db.Uuid
+  chunkIndex Int                         @map("chunk_index")
+  content    String                      @db.Text
   embedding  Unsupported("vector(1536)")
   metadata   Json?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime                    @default(now()) @map("created_at")
 
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@map("embeddings")
@@ -383,20 +383,20 @@ model Embedding {
 // =============================================================================
 
 model TokenUsage {
-  id             String      @id @default(uuid()) @db.Uuid
-  organizationId String      @db.Uuid
-  userId         String?     @db.Uuid
-  conversationId String?     @db.Uuid
-  modelConfigId  String      @db.Uuid
-  inputTokens    Int
-  outputTokens   Int
-  costUsd        Float
-  cachedTokens   Int         @default(0)
-  requestId      String?
-  createdAt      DateTime    @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  conversationId String?  @map("conversation_id") @db.Uuid
+  modelConfigId  String   @map("model_config_id") @db.Uuid
+  inputTokens    Int      @map("input_tokens")
+  outputTokens   Int      @map("output_tokens")
+  costUsd        Float    @map("cost_usd")
+  cachedTokens   Int      @default(0) @map("cached_tokens")
+  requestId      String?  @map("request_id")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  user           User?       @relation(fields: [userId], references: [id])
-  modelConfig    ModelConfig @relation(fields: [modelConfigId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+  modelConfig ModelConfig @relation(fields: [modelConfigId], references: [id])
 
   @@index([organizationId, createdAt])
   @@index([userId, createdAt])
@@ -409,40 +409,40 @@ model TokenUsage {
 // =============================================================================
 
 model Plan {
-  id             String         @id @default(uuid()) @db.Uuid
-  slug           String         @unique // "starter", "pro", "enterprise"
+  id             String  @id @default(uuid()) @db.Uuid
+  slug           String  @unique // "starter", "pro", "enterprise"
   name           String
   description    String?
-  priceMonthly   Int // cents
-  priceYearly    Int // cents
-  tokenQuota     Int // monthly token allowance, -1 for unlimited
-  seatQuota      Int
-  storageQuotaMb Int
+  priceMonthly   Int     @map("price_monthly") // cents
+  priceYearly    Int     @map("price_yearly") // cents
+  tokenQuota     Int     @map("token_quota") // monthly token allowance, -1 for unlimited
+  seatQuota      Int     @map("seat_quota")
+  storageQuotaMb Int     @map("storage_quota_mb")
   features       Json?
-  isActive       Boolean        @default(true)
+  isActive       Boolean @default(true) @map("is_active")
 
-  subscriptions  Subscription[]
+  subscriptions Subscription[]
 
   @@map("plans")
 }
 
 model Subscription {
   id                 String             @id @default(uuid()) @db.Uuid
-  organizationId     String             @db.Uuid
-  planId             String             @db.Uuid
+  organizationId     String             @map("organization_id") @db.Uuid
+  planId             String             @map("plan_id") @db.Uuid
   status             SubscriptionStatus @default(TRIALING)
   provider           String             @default("stripe") // "stripe" | "lemonsqueezy"
-  providerCustomerId String?
-  providerSubId      String?
-  currentPeriodStart DateTime?
-  currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean            @default(false)
+  providerCustomerId String?            @map("provider_customer_id")
+  providerSubId      String?            @map("provider_sub_id")
+  currentPeriodStart DateTime?          @map("current_period_start")
+  currentPeriodEnd   DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd  Boolean            @default(false) @map("cancel_at_period_end")
   metadata           Json?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
 
-  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  plan               Plan               @relation(fields: [planId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         Plan         @relation(fields: [planId], references: [id])
 
   @@unique([organizationId, provider])
   @@map("subscriptions")
@@ -450,31 +450,31 @@ model Subscription {
 
 model BillingEvent {
   id              String           @id @default(uuid()) @db.Uuid
-  organizationId  String           @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
   type            BillingEventType
-  amountCents     Int              @default(0)
+  amountCents     Int              @default(0) @map("amount_cents")
   currency        String           @default("usd")
   provider        String           @default("stripe")
-  providerEventId String?          @unique
+  providerEventId String?          @unique @map("provider_event_id")
   metadata        Json?
-  createdAt       DateTime         @default(now())
+  createdAt       DateTime         @default(now()) @map("created_at")
 
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, createdAt])
   @@map("billing_events")
 }
 
 model UsageRecord {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
   metric         String // "tokens" | "storage_mb" | "seats"
   value          Int
-  periodStart    DateTime
-  periodEnd      DateTime
-  createdAt      DateTime     @default(now())
+  periodStart    DateTime @map("period_start")
+  periodEnd      DateTime @map("period_end")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, metric, periodStart])
   @@map("usage_records")
@@ -485,19 +485,19 @@ model UsageRecord {
 // =============================================================================
 
 model AuditLog {
-  id             String        @id @default(uuid()) @db.Uuid
-  organizationId String?       @db.Uuid
-  userId         String?       @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String?     @map("organization_id") @db.Uuid
+  userId         String?     @map("user_id") @db.Uuid
   action         AuditAction
-  resourceType   String
-  resourceId     String?
-  ipAddress      String?
-  userAgent      String?
+  resourceType   String      @map("resource_type")
+  resourceId     String?     @map("resource_id")
+  ipAddress      String?     @map("ip_address")
+  userAgent      String?     @map("user_agent")
   metadata       Json?
-  createdAt      DateTime      @default(now())
+  createdAt      DateTime    @default(now()) @map("created_at")
 
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User?         @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id])
 
   @@index([organizationId, createdAt])
   @@index([userId, createdAt])
@@ -511,36 +511,36 @@ model AuditLog {
 
 model ApiKey {
   id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
-  userId         String       @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
   name           String
-  hashedKey      String       @unique // argon2 hash of the actual key
+  hashedKey      String       @unique @map("hashed_key") // argon2 hash of the actual key
   prefix         String // first 8 chars for display "nk_live_abcd..."
-  lastUsedAt     DateTime?
-  expiresAt      DateTime?
+  lastUsedAt     DateTime?    @map("last_used_at")
+  expiresAt      DateTime?    @map("expires_at")
   status         ApiKeyStatus @default(ACTIVE)
-  createdAt      DateTime     @default(now())
-  revokedAt      DateTime?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  revokedAt      DateTime?    @map("revoked_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
 
   @@index([organizationId, status])
   @@map("api_keys")
 }
 
 model WebhookEndpoint {
-  id             String           @id @default(uuid()) @db.Uuid
-  organizationId String           @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
   url            String
   events         String[] // ["conversation.created", "billing.invoice_paid"]
   secret         String // HMAC signing secret
-  isActive       Boolean          @default(true)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  deliveries     WebhookEvent[]
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries   WebhookEvent[]
 
   @@index([organizationId, isActive])
   @@map("webhook_endpoints")
@@ -548,17 +548,17 @@ model WebhookEndpoint {
 
 model WebhookEvent {
   id           String             @id @default(uuid()) @db.Uuid
-  endpointId   String             @db.Uuid
-  eventType    String
+  endpointId   String             @map("endpoint_id") @db.Uuid
+  eventType    String             @map("event_type")
   payload      Json
   status       WebhookEventStatus @default(PENDING)
-  responseCode Int?
+  responseCode Int?               @map("response_code")
   attempts     Int                @default(0)
-  nextRetryAt  DateTime?
-  deliveredAt  DateTime?
-  createdAt    DateTime           @default(now())
+  nextRetryAt  DateTime?          @map("next_retry_at")
+  deliveredAt  DateTime?          @map("delivered_at")
+  createdAt    DateTime           @default(now()) @map("created_at")
 
-  endpoint     WebhookEndpoint    @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 
   @@index([endpointId, status])
   @@index([status, nextRetryAt])
@@ -571,18 +571,18 @@ model WebhookEvent {
 
 model DataRequest {
   id                String            @id @default(uuid()) @db.Uuid
-  organizationId    String            @db.Uuid
-  userId            String            @db.Uuid
+  organizationId    String            @map("organization_id") @db.Uuid
+  userId            String            @map("user_id") @db.Uuid
   type              DataRequestType
   status            DataRequestStatus @default(PENDING)
-  downloadUrl       String? // signed URL when ready (EXPORT)
-  downloadExpiresAt DateTime?
-  requestedAt       DateTime          @default(now())
-  completedAt       DateTime?
+  downloadUrl       String?           @map("download_url") // signed URL when ready (EXPORT)
+  downloadExpiresAt DateTime?         @map("download_expires_at")
+  requestedAt       DateTime          @default(now()) @map("requested_at")
+  completedAt       DateTime?         @map("completed_at")
   metadata          Json?
 
-  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user              User              @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
 
   @@index([organizationId, status])
   @@index([userId, status])
@@ -594,20 +594,20 @@ model DataRequest {
 // =============================================================================
 
 model FileAsset {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
-  uploadedById   String?      @db.Uuid
-  storagePath    String // path inside Supabase Storage bucket
-  bucket         String       @default("uploads")
-  fileName       String
-  mimeType       String
-  sizeBytes      Int
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  uploadedById   String?  @map("uploaded_by_id") @db.Uuid
+  storagePath    String   @map("storage_path") // path inside Supabase Storage bucket
+  bucket         String   @default("uploads")
+  fileName       String   @map("file_name")
+  mimeType       String   @map("mime_type")
+  sizeBytes      Int      @map("size_bytes")
   checksum       String? // sha256
   metadata       Json?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  document       Document?
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document     Document?
 
   @@index([organizationId, createdAt])
   @@map("file_assets")
