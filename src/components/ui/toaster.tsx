@@ -1,7 +1,16 @@
-import { Toaster as SonnerToaster } from "sonner";
+"use client";
+
+import { Toaster as SonnerToaster, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof SonnerToaster>;
 
+/**
+ * Toaster wrapper.
+ *
+ * Mounted once in the root layout. Uses sonner 2.x which is compatible
+ * with React 19's stricter setState rules (no more "Cannot update a
+ * component while rendering a different component" warnings).
+ */
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <SonnerToaster
@@ -20,4 +29,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-export { Toaster };
+export { Toaster, toast };
