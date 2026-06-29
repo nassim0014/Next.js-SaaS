@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,6 @@ import { toast } from "sonner";
 import { Github } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,8 +41,8 @@ export default function SignupPage() {
       }
       // Signed up + auto-confirmed (e.g., when email auth is set to "no confirmation")
       toast.success("Account created!");
-      router.push("/dashboard");
-      router.refresh();
+      // Hard navigation — forces full page load so auth cookie is sent reliably
+      window.location.href = "/dashboard";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign up failed");
     } finally {
