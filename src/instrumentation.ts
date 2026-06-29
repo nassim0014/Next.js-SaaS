@@ -1,5 +1,5 @@
 /**
- * Next.js instrumentation hook — runs once at server startup, in every worker.
+ * Next.js instrumentation hook — runs once at server startup.
  *
  * Forces Node.js to prefer IPv4 addresses when resolving DNS. This fixes
  * "Can't reach database server" errors on networks where IPv6 resolution
@@ -10,23 +10,18 @@
  *   - Prisma Node.js client uses Node's DNS, which tries IPv6 first
  *   - On networks without IPv6, the IPv6 attempt fails and Prisma doesn't
  *     retry with IPv4 → "Can't reach database server" error
- *   - NODE_OPTIONS='--dns-result-order=ipv4first' doesn't work because
- *     Turbopack worker threads don't inherit env vars
+ *   - NODE_OPTIONS='--dns-result-order=ipv4first' alone doesn't work
+ *     reliably because Turbopack worker threads don't inherit env vars
  *
- * This file is loaded by Next.js automatically on server startup.
- * No config flag needed in Next.js 16.
+ * Implementation note: the actual node:dns import is in a separate file
+ * (instrumentation-node.ts) so that Turbopack's static analysis doesn't
+ * choke on node:dns when evaluating this file for the Edge Runtime.
  */
 
 export async function register() {
-  // Always set IPv4-first — runs in both nodejs and edge runtimes
-  // (the import is dynamic so edge runtime doesn't choke on node:dns)
-  try {
-    if (process.env.NEXT_RUNTIME !== "edge") {
-      const dns = await import("node:dns");
-      dns.setDefaultResultOrder("ipv4first");
-      console.log("[instrumentation] DNS set to ipv4first ✅");
-    }
-  } catch (err) {
-    console.error("[instrumentation] Failed to set DNS order:", err);
+  // Only run in the Node.js runtime, not Edge
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { setupDns } = await import("./instrumentation-node");
+    setupDns();
   }
 }
