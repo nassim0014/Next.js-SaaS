@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { getActiveOrgId, getUserOrganizations } from "@/lib/auth/org-context";
+import { getActiveOrgId, getUserOrganizations, setActiveOrgId } from "@/lib/auth/org-context";
 import { dashboardNav } from "@/config/nav";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,33 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const orgs = await getUserOrganizations(session.user.id);
-  const activeOrgId = await getActiveOrgId();
-
-  if (!activeOrgId && orgs.length > 0) {
-    // Auto-select first org if none active
-    redirect(`/api/org/switch?orgId=${orgs[0]!.organization.id}`);
-  }
 
   if (orgs.length === 0) {
     // New user — show onboarding
     redirect("/onboarding");
   }
 
+  // Get or set the active org cookie
+  let activeOrgId = await getActiveOrgId();
+
+  if (!activeOrgId) {
+    // No active org cookie — set it to the first org and use it for this render.
+    // Previously this redirected to /api/org/switch, which caused a redirect loop
+    // because cookies().set() in route handlers doesn't persist across redirects.
+    // Setting it directly in the Server Component works reliably.
+    activeOrgId = orgs[0]!.organization.id;
+    await setActiveOrgId(activeOrgId);
+  }
+
+  // Verify the active org is one the user belongs to
   const activeMembership = orgs.find((m) => m.organizationId === activeOrgId);
+
+  if (!activeMembership) {
+    // The cookie has a stale org ID — reset to the first org
+    activeOrgId = orgs[0]!.organization.id;
+    await setActiveOrgId(activeOrgId);
+  }
+
   const userRole = activeMembership?.role ?? "VIEWER";
 
   return (

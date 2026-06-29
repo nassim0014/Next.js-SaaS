@@ -66,6 +66,8 @@
     "skills",
     "upload",
     "download",
-    "supabase/functions"
+    "supabase/functions",
+    "prisma/seed.ts",
+    "scripts"
   ]
 }
