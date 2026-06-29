@@ -1,0 +1,614 @@
+// =============================================================================
+// AI SaaS Boilerplate — Prisma Schema
+// -----------------------------------------------------------------------------
+// Provider:   PostgreSQL (Supabase)
+// Multi-tenancy: shared DB, `organizationId` on every tenant-scoped table
+// Auth: Supabase Auth (User.id mirrors auth.users.id via UUID)
+// Vector: pgvector extension for RAG embeddings
+//
+// DESIGN PRINCIPLES
+//   1. Every tenant table carries `organizationId` + a composite index on it
+//   2. UUIDs everywhere (Supabase-friendly, no sequential ID enumeration attacks)
+//   3. Soft references for high-volume tables (TokenUsage, AuditLog)
+//   4. Money stored in cents (Int), never floats
+//   5. Snake_case column names via @map for SQL ergonomics
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector, pgcrypto]
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum RoleName {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  PAUSED
+}
+
+enum BillingEventType {
+  INVOICE_PAID
+  INVOICE_FAILED
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_UPDATED
+  SUBSCRIPTION_CANCELED
+  USAGE_RECORDED
+  REFUND_ISSUED
+}
+
+enum AgentStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  INVITE
+  ROLE_CHANGE
+  API_KEY_USED
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum WebhookEventStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+enum DataRequestType {
+  EXPORT
+  DELETION
+}
+
+enum DataRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// =============================================================================
+// IDENTITY & MULTI-TENANCY
+// =============================================================================
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  locale        String    @default("en")
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships   Membership[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  conversations Conversation[]
+  tokenUsage    TokenUsage[]
+  dataRequests  DataRequest[]
+
+  @@map("users")
+}
+
+model Organization {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String   @unique
+  logoUrl      String?
+  billingEmail String?
+  trialEndsAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships      Membership[]
+  invitations      Invitation[]
+  agents           Agent[]
+  conversations    Conversation[]
+  knowledgeBases   KnowledgeBase[]
+  subscriptions    Subscription[]
+  billingEvents    BillingEvent[]
+  usageRecords     UsageRecord[]
+  apiKeys          ApiKey[]
+  webhookEndpoints WebhookEndpoint[]
+  auditLogs        AuditLog[]
+  dataRequests     DataRequest[]
+  fileAssets       FileAsset[]
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+model Membership {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  organizationId String           @db.Uuid
+  role           RoleName         @default(MEMBER)
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+  @@map("memberships")
+}
+
+model Invitation {
+  id             String       @id @default(uuid()) @db.Uuid
+  email          String
+  organizationId String       @db.Uuid
+  role           RoleName     @default(MEMBER)
+  token          String       @unique @default(uuid())
+  invitedById    String       @db.Uuid
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([email, organizationId])
+  @@map("invitations")
+}
+
+// =============================================================================
+// RBAC
+// =============================================================================
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  action      String // e.g. "conversations:read", "billing:manage"
+  description String?
+  roles       RolePermission[]
+
+  @@unique([action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid()) @db.Uuid
+  permissionId String     @db.Uuid
+  role         RoleName
+
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@map("role_permissions")
+}
+
+// =============================================================================
+// AI DOMAIN
+// =============================================================================
+
+model Agent {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String
+  description    String?
+  systemPrompt   String?      @db.Text
+  modelConfigId  String?      @db.Uuid
+  status         AgentStatus  @default(DRAFT)
+  temperature    Float        @default(0.7)
+  maxTokens      Int          @default(4096)
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  modelConfig    ModelConfig?   @relation(fields: [modelConfigId], references: [id])
+  conversations  Conversation[]
+
+  @@index([organizationId, status])
+  @@map("agents")
+}
+
+model ModelConfig {
+  id              String   @id @default(uuid()) @db.Uuid
+  provider        String // "openai" | "anthropic" | "cohere" | "mistral"
+  modelName       String // "gpt-4o" | "claude-3-5-sonnet" | etc.
+  displayName     String
+  contextWindow   Int
+  inputCostPer1K  Float // USD per 1K input tokens
+  outputCostPer1K Float // USD per 1K output tokens
+  capabilities    Json?
+  agents          Agent[]
+  tokenUsage      TokenUsage[]
+  messages        Message[]
+
+  @@unique([provider, modelName])
+  @@map("model_configs")
+}
+
+model Conversation {
+  id                String             @id @default(uuid()) @db.Uuid
+  organizationId    String             @db.Uuid
+  agentId           String?            @db.Uuid
+  userId            String?            @db.Uuid
+  title             String?
+  status            ConversationStatus @default(ACTIVE)
+  tokenCount        Int                @default(0)
+  estimatedCostUsd  Float              @default(0)
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent             Agent?             @relation(fields: [agentId], references: [id])
+  user              User?              @relation(fields: [userId], references: [id])
+  messages          Message[]
+
+  @@index([organizationId, userId])
+  @@index([organizationId, status])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  role           MessageRole
+  content        String       @db.Text
+  tokenCount     Int          @default(0)
+  modelConfigId  String?      @db.Uuid
+  toolCalls      Json?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  modelConfig    ModelConfig? @relation(fields: [modelConfigId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// =============================================================================
+// RAG / KNOWLEDGE BASE  (pgvector)
+// =============================================================================
+
+model KnowledgeBase {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String
+  description    String?
+  embeddingModel String       @default("text-embedding-3-small")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents      Document[]
+
+  @@index([organizationId])
+  @@map("knowledge_bases")
+}
+
+model Document {
+  id              String         @id @default(uuid()) @db.Uuid
+  knowledgeBaseId String         @db.Uuid
+  fileAssetId     String?        @unique @db.Uuid
+  title           String
+  sourceUrl       String?
+  status          DocumentStatus @default(PENDING)
+  chunkCount      Int            @default(0)
+  charCount       Int            @default(0)
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  knowledgeBase   KnowledgeBase  @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  fileAsset       FileAsset?     @relation(fields: [fileAssetId], references: [id])
+  embeddings      Embedding[]
+
+  @@index([knowledgeBaseId, status])
+  @@map("documents")
+}
+
+model Embedding {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @db.Uuid
+  chunkIndex Int
+  content    String   @db.Text
+  embedding  Unsupported("vector(1536)")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("embeddings")
+}
+
+// =============================================================================
+// AI COST OBSERVABILITY  — ⭐ THE 5TH CREATIVE USP
+// -----------------------------------------------------------------------------
+// Every LLM call is metered and attributed to org + user + conversation + model.
+// This powers: budget caps, usage-based billing, per-tenant cost dashboards,
+// and overage protection. No AI SaaS boilerplate ships with this out of the box.
+// =============================================================================
+
+model TokenUsage {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  userId         String?     @db.Uuid
+  conversationId String?     @db.Uuid
+  modelConfigId  String      @db.Uuid
+  inputTokens    Int
+  outputTokens   Int
+  costUsd        Float
+  cachedTokens   Int         @default(0)
+  requestId      String?
+  createdAt      DateTime    @default(now())
+
+  user           User?       @relation(fields: [userId], references: [id])
+  modelConfig    ModelConfig @relation(fields: [modelConfigId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@map("token_usage")
+}
+
+// =============================================================================
+// BILLING
+// =============================================================================
+
+model Plan {
+  id             String         @id @default(uuid()) @db.Uuid
+  slug           String         @unique // "starter", "pro", "enterprise"
+  name           String
+  description    String?
+  priceMonthly   Int // cents
+  priceYearly    Int // cents
+  tokenQuota     Int // monthly token allowance, -1 for unlimited
+  seatQuota      Int
+  storageQuotaMb Int
+  features       Json?
+  isActive       Boolean        @default(true)
+
+  subscriptions  Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid()) @db.Uuid
+  organizationId     String             @db.Uuid
+  planId             String             @db.Uuid
+  status             SubscriptionStatus @default(TRIALING)
+  provider           String             @default("stripe") // "stripe" | "lemonsqueezy"
+  providerCustomerId String?
+  providerSubId      String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan               Plan               @relation(fields: [planId], references: [id])
+
+  @@unique([organizationId, provider])
+  @@map("subscriptions")
+}
+
+model BillingEvent {
+  id              String           @id @default(uuid()) @db.Uuid
+  organizationId  String           @db.Uuid
+  type            BillingEventType
+  amountCents     Int              @default(0)
+  currency        String           @default("usd")
+  provider        String           @default("stripe")
+  providerEventId String?          @unique
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("billing_events")
+}
+
+model UsageRecord {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  metric         String // "tokens" | "storage_mb" | "seats"
+  value          Int
+  periodStart    DateTime
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, metric, periodStart])
+  @@map("usage_records")
+}
+
+// =============================================================================
+// AUDIT LOG
+// =============================================================================
+
+model AuditLog {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String?       @db.Uuid
+  userId         String?       @db.Uuid
+  action         AuditAction
+  resourceType   String
+  resourceId     String?
+  ipAddress      String?
+  userAgent      String?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+// =============================================================================
+// API KEYS & WEBHOOKS
+// =============================================================================
+
+model ApiKey {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  userId         String       @db.Uuid
+  name           String
+  hashedKey      String       @unique // argon2 hash of the actual key
+  prefix         String // first 8 chars for display "nk_live_abcd..."
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  status         ApiKeyStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  revokedAt      DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, status])
+  @@map("api_keys")
+}
+
+model WebhookEndpoint {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  url            String
+  events         String[] // ["conversation.created", "billing.invoice_paid"]
+  secret         String // HMAC signing secret
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries     WebhookEvent[]
+
+  @@index([organizationId, isActive])
+  @@map("webhook_endpoints")
+}
+
+model WebhookEvent {
+  id           String             @id @default(uuid()) @db.Uuid
+  endpointId   String             @db.Uuid
+  eventType    String
+  payload      Json
+  status       WebhookEventStatus @default(PENDING)
+  responseCode Int?
+  attempts     Int                @default(0)
+  nextRetryAt  DateTime?
+  deliveredAt  DateTime?
+  createdAt    DateTime           @default(now())
+
+  endpoint     WebhookEndpoint    @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId, status])
+  @@index([status, nextRetryAt])
+  @@map("webhook_events")
+}
+
+// =============================================================================
+// GDPR / COMPLIANCE
+// =============================================================================
+
+model DataRequest {
+  id                String            @id @default(uuid()) @db.Uuid
+  organizationId    String            @db.Uuid
+  userId            String            @db.Uuid
+  type              DataRequestType
+  status            DataRequestStatus @default(PENDING)
+  downloadUrl       String? // signed URL when ready (EXPORT)
+  downloadExpiresAt DateTime?
+  requestedAt       DateTime          @default(now())
+  completedAt       DateTime?
+  metadata          Json?
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@map("data_requests")
+}
+
+// =============================================================================
+// STORAGE
+// =============================================================================
+
+model FileAsset {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  uploadedById   String?      @db.Uuid
+  storagePath    String // path inside Supabase Storage bucket
+  bucket         String       @default("uploads")
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  checksum       String? // sha256
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document       Document?
+
+  @@index([organizationId, createdAt])
+  @@map("file_assets")
+}
