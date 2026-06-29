@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,8 @@ import { Label } from "@/components/ui/label";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Github } from "lucide-react";
-import { Suspense } from "react";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
 
@@ -33,8 +31,10 @@ function LoginForm() {
         return;
       }
       toast.success("Signed in!");
-      router.push(redirect);
-      router.refresh();
+      // Hard navigation — forces full page load so the auth cookie is sent
+      // to the server on the first request. Client-side router.push() can
+      // race with cookie propagation and cause /dashboard to bounce back.
+      window.location.href = redirect;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign in failed");
     } finally {
