@@ -6,12 +6,19 @@
 
 [![Build](https://img.shields.io/github/actions/workflow/status/nassim0014/Next.js-SaaS/ci.yml?branch=main&label=build&style=flat-square)](https://github.com/nassim0014/Next.js-SaaS/actions)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20Commercial-blue?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)](#)
+[![Version](https://img.shields.io/badge/version-1.1.0-brightgreen?style=flat-square)](#)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20pgvector-green?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![Prisma](https://img.shields.io/badge/Prisma-6-blue?style=flat-square&logo=prisma&logoColor=white)](https://prisma.io)
+[![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square&logo=cloudflare&logoColor=white)](docs/DEPLOYMENT-CLOUDFLARE.md)
 [![MCP](https://img.shields.io/badge/MCP-ready-purple?style=flat-square)](docs/MCP-SETUP.md)
+
+<!-- 📹 Replace this comment with your Loom embed once you record the walkthrough:
+<a href="https://www.loom.com/share/YOUR_VIDEO_ID">
+  <img src="https://cdn.loom.com/sessions/thumbnails/YOUR_VIDEO_ID-with-play.jpg" width="600" alt="2-minute walkthrough" />
+</a>
+-->
 
 </div>
 
@@ -257,7 +264,7 @@ See [`docs/SECURITY.md`](docs/SECURITY.md) for the full threat model.
 
 ## 🛣️ Roadmap
 
-- [ ] **v1.1** — Usage dashboard charts (Recharts), per-agent cost breakdown
+- [x] **v1.1** — Usage dashboard charts (Recharts), per-agent cost breakdown
 - [ ] **v1.2** — SSO/SAML for enterprise tier
 - [ ] **v1.3** — Realtime presence (Supabase Realtime) for collaborative chat
 - [ ] **v1.4** — Edge Functions for hot-path queries (latency < 50ms)

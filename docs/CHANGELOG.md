@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-01-XX
+
+### Added
+
+- **Recharts usage dashboard** — `/dashboard/usage` now ships with:
+  - Daily usage area chart (dual-axis: tokens + cost, last 30 days)
+  - Model breakdown pie chart (token distribution across providers)
+  - Top models by cost table
+  - Stat cards: total tokens, total cost, avg cost per 1K tokens
+- **Cloudflare Pages deployment** — `wrangler.toml` + `docs/DEPLOYMENT-CLOUDFLARE.md`
+  - Free-tier-friendly, commercial-OK alternative to Vercel
+  - Cron trigger config for usage-meter + webhook-retry
+- **GitHub Actions CI** — `.github/workflows/ci.yml` runs build + typecheck + lint on every PR
+- **PR template** — `.github/pull_request_template.md`
+
+### Changed
+
+- Bumped version badge to 1.1.0
+- Marked v1.1 roadmap item as complete
+
 ## [1.0.0] — 2026-01-XX
 
 ### Added
