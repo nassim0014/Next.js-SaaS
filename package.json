@@ -2,7 +2,7 @@
   "name": "nextjs-saas",
   "version": "1.0.0",
   "private": true,
-  "description": "Production-grade Next.js 16 SaaS boilerplate \u2014 AI-native, multi-tenant, MCP-ready.",
+  "description": "Production-grade Next.js 16 SaaS boilerplate — AI-native, multi-tenant, MCP-ready.",
   "license": "(MIT OR Commercial)",
   "type": "module",
   "engines": {
@@ -62,6 +62,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.0",
+    "recharts": "^2.15.4",
     "sonner": "^1.7.1",
     "stripe": "^17.5.0",
     "tailwind-merge": "^2.6.0",
