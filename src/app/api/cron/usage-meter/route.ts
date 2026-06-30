@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rollupCurrentPeriod } from "@/lib/billing/metering";
+import { safeCompare } from "@/lib/crypto";
 
 /**
  * Cron job — rolls up token usage into UsageRecord for every org.
@@ -12,12 +13,11 @@ import { rollupCurrentPeriod } from "@/lib/billing/metering";
  *
  * Protected by CRON_SECRET — set in .env.local.
  */
-
 export async function GET(req: NextRequest) {
-  // Verify the cron secret
+  // Verify the cron secret using constant-time comparison (prevents timing attacks)
   const authHeader = req.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
-  if (!secret || authHeader !== `Bearer ${secret}`) {
+  if (!secret || !authHeader || !safeCompare(authHeader, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
