@@ -149,6 +149,28 @@ async function main() {
       },
     });
 
+    // Demo subscription (Pro plan, trialing) so the chat budget check works
+    const proPlan = await prisma.plan.findUnique({ where: { slug: "pro" } });
+    if (proPlan) {
+      await prisma.subscription.upsert({
+        where: {
+          organizationId_provider: {
+            organizationId: demoOrg.id,
+            provider: "stripe",
+          },
+        },
+        update: {},
+        create: {
+          organizationId: demoOrg.id,
+          planId: proPlan.id,
+          status: "TRIALING",
+          provider: "stripe",
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14-day trial
+        },
+      });
+    }
+
     // Demo agent
     const freeModel = await prisma.modelConfig.findFirst({
       where: { provider: "google", modelName: "gemini-2.0-flash" },
