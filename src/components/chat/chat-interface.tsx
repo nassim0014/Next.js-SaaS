@@ -41,12 +41,17 @@ export function ChatInterface({
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, reload } = useChat({
     api: "/api/chat",
-    body: {
+    // Use a function so the body re-evaluates on every request (otherwise
+    // selectedConversationId is captured at initial render time)
+    prepareRequestBody: (opts) => ({
+      messages: opts.messages,
       agentId: selectedAgentId,
       conversationId: selectedConversationId,
-    },
+    }),
+    streamProtocol: "data",
     onError: (err) => {
-      toast.error(err.message);
+      console.error("[useChat error]", err);
+      toast.error(err.message || "Chat error — check console for details");
     },
     onFinish: () => {
       router.refresh();
