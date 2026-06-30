@@ -6,6 +6,7 @@ import { dashboardNav } from "@/config/nav";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
 import { can } from "@/lib/auth/rbac";
+import { OrgSwitcher } from "@/components/dashboard/org-switcher";
 import { Bot, Github, LogOut } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -89,14 +90,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
         <header className="flex h-16 items-center justify-between border-b px-6">
-          <div>
-            <p className="text-xs text-muted-foreground">Organization</p>
-            <p className="font-medium">
-              {activeMembership?.organization.name ?? "Select an org"}
-            </p>
+          <div className="flex items-center gap-3">
+            {/* Org switcher */}
+            {orgs.length > 1 ? (
+              <OrgSwitcher
+                orgs={orgs.map((m) => ({
+                  organizationId: m.organizationId,
+                  organization: { name: m.organization.name },
+                }))}
+                activeOrgId={activeMembership!.organizationId}
+              />
+            ) : (
+              <div>
+                <p className="text-xs text-muted-foreground">Organization</p>
+                <p className="font-medium text-sm">
+                  {activeMembership?.organization.name ?? "Select an org"}
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{session.user.email}</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
+              {session.user.email[0]?.toUpperCase()}
+            </div>
           </div>
         </header>
         <div className="p-6">{children}</div>
