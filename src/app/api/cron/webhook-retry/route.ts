@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEventsForRetry } from "@/lib/webhooks/retry";
 import { prisma } from "@/lib/prisma";
 import { signWebhook } from "@/lib/webhooks/signer";
+import { safeCompare } from "@/lib/crypto";
 
 /**
  * Cron job — retries failed outbound webhook deliveries.
@@ -13,7 +14,7 @@ import { signWebhook } from "@/lib/webhooks/signer";
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
-  if (!secret || authHeader !== `Bearer ${secret}`) {
+  if (!secret || !authHeader || !safeCompare(authHeader, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

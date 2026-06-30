@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
  * Debug endpoint — shows exactly what DATABASE_URL the Next.js process sees,
  * and attempts a Prisma query. Use this to diagnose connection issues.
  *
+ * ⚠️ SECURITY: This endpoint is DISABLED in production (NODE_ENV=production).
+ * It exposes DB connection info, runtime details, and Prisma error messages
+ * that could help an attacker probe the infrastructure.
+ *
  * Visit: http://localhost:3000/api/debug/db
  *
  * Compare the output to what `set -a && source .env && set +a && pnpm tsx scripts/test-db.ts` shows.
@@ -15,6 +19,14 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Block in production — this endpoint leaks infrastructure details.
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Debug endpoints are disabled in production." },
+      { status: 404 }
+    );
+  }
+
   const dbUrl = process.env.DATABASE_URL;
   const directUrl = process.env.DIRECT_URL;
 
