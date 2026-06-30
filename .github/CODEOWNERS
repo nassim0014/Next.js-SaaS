@@ -1,0 +1,12 @@
+* @nassim0014
+
+# Security-sensitive paths — require maintainer review
+/src/lib/crypto.ts              @nassim0014
+/src/lib/auth/                  @nassim0014
+/src/lib/billing/               @nassim0014
+/src/middleware.ts              @nassim0014
+/prisma/schema.prisma           @nassim0014
+/supabase/migrations/           @nassim0014
+/.github/workflows/             @nassim0014
+/next.config.ts                 @nassim0014
+/.env.example                   @nassim0014

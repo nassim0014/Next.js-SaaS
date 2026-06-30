@@ -80,7 +80,25 @@ This doc describes the security design of the boilerplate. Use it as a starting 
 - `X-Frame-Options: DENY` — no clickjacking
 - `X-Content-Type-Options: nosniff` — no MIME sniffing
 - `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` — HSTS
+- `Content-Security-Policy` — strict default-src, script-src, connect-src allowlist
+- `Cross-Origin-Resource-Policy: same-origin` — Spectre defense
+- `Cross-Origin-Opener-Policy: same-origin`
+- `Cross-Origin-Embedder-Policy: require-corp`
+- `X-DNS-Prefetch-Control: off`
+
+## Secrets Comparison
+
+- All secret comparisons (CRON_SECRET, API keys, webhook signatures) use
+  `safeCompare()` from `lib/crypto.ts` — constant-time comparison via
+  `crypto.timingSafeEqual()`. Never use `===` or `!==` for secrets.
+
+## Debug Endpoints
+
+- `/api/debug/db` is **disabled in production** (`NODE_ENV=production`).
+  Returns 404. In development, it masks passwords before displaying
+  DATABASE_URL / DIRECT_URL.
 
 ## Threats not yet mitigated
 
@@ -90,9 +108,16 @@ Document known gaps here so buyers know what to harden:
 - **Rate limiting** — not yet implemented at the app layer; use Cloudflare/Vercel edge rate limits
 - **DDoS** — relies on hosting provider's edge protection
 - **SQL injection** — Prisma parameterizes all queries; raw queries in `lib/ai/rag.ts` use tagged templates (safe)
+- **CSP in production** — current CSP uses `'unsafe-inline'` + `'unsafe-eval'` for Next.js compatibility. For strict CSP, enable nonce-based CSP via middleware.
 
 ## Reporting vulnerabilities
 
-Email: `your-email@example.com` (replace in your fork)
+Email: **nassim@kinzoils.com**
 
-Please do not open public issues for security vulnerabilities.
+Please do not open public issues for security vulnerabilities. Include:
+- Affected endpoint / component
+- Steps to reproduce
+- Expected vs. actual behavior
+- Any proof-of-concept (redact secrets)
+
+**Response SLA:** Acknowledgement within 48 hours, assessment within 5 business days.
