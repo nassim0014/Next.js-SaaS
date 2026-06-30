@@ -51,6 +51,12 @@ export async function recordTokenUsage(input: RecordTokenUsageInput): Promise<vo
  * Budget = Plan.tokenQuota (monthly). If -1, unlimited.
  * Comparison: SUM(TokenUsage.inputTokens + outputTokens) for current period
  * vs. Plan.tokenQuota.
+ *
+ * GRACEFUL DEGRADATION: If the org has no active subscription (e.g. a new
+ * trial org that hasn't been set up in Stripe yet, or the demo org from
+ * the seed script), fall back to the Free plan's quota instead of throwing.
+ * This lets users try the chat before billing is configured. Once a
+ * subscription exists (status ACTIVE or TRIALING), that plan's quota applies.
  */
 export async function checkBudget(organizationId: string): Promise<void> {
   const subscription = await prisma.subscription.findFirst({
@@ -58,23 +64,29 @@ export async function checkBudget(organizationId: string): Promise<void> {
     include: { plan: true },
   });
 
-  if (!subscription) {
-    throw new Error("NO_SUBSCRIPTION: org has no active subscription");
+  // Determine the applicable quota
+  let quota: number;
+  if (subscription) {
+    quota = subscription.plan.tokenQuota;
+  } else {
+    // No subscription — fall back to the Free plan quota (50K tokens/month).
+    // This lets new/trial users chat before billing is set up.
+    const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
+    quota = freePlan?.tokenQuota ?? 50_000;
   }
 
-  if (subscription.plan.tokenQuota === -1) {
-    return; // Unlimited plan
-  }
+  // Unlimited plan
+  if (quota === -1) return;
 
   const usage = await getCurrentPeriodUsage(organizationId);
-  if (usage.totalTokens >= subscription.plan.tokenQuota) {
+  if (usage.totalTokens >= quota) {
     throw new Error("BUDGET_EXCEEDED");
   }
 
   // Fire 80% / 100% alerts (webhook + email) — implemented in lib/billing/metering.ts
   // The check happens here; the alert dispatch happens async.
-  if (usage.totalTokens >= subscription.plan.tokenQuota * 0.8) {
-    await alertBudgetThreshold(organizationId, usage.totalTokens, subscription.plan.tokenQuota).catch(
+  if (usage.totalTokens >= quota * 0.8) {
+    await alertBudgetThreshold(organizationId, usage.totalTokens, quota).catch(
       () => null
     );
   }
