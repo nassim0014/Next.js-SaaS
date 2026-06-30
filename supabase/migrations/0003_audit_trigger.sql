@@ -17,6 +17,7 @@ END;
 $$;
 
 -- Apply to every table with an updated_at column
+-- Idempotent: DROP TRIGGER IF EXISTS before CREATE so re-running is safe.
 DO $$
 DECLARE
   t TEXT;
@@ -27,11 +28,12 @@ BEGIN
       AND table_schema = 'public'
   LOOP
     EXECUTE format('
+      DROP TRIGGER IF EXISTS set_updated_at ON %I;
       CREATE TRIGGER set_updated_at
         BEFORE UPDATE ON %I
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at();
-      ', t);
+      ', t, t);
   END LOOP;
 END;
 $$;
