@@ -1,0 +1,84 @@
+---
+name: 🐛 Bug Report
+description: Report something that is broken or behaving unexpectedly
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report!
+        If this is a security vulnerability, **DO NOT** use this form — see [SECURITY.md](../../docs/SECURITY.md) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the unexpected behavior. Include the smallest reproducible example.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Authentication (Supabase)
+        - RBAC / permissions
+        - Multi-tenancy
+        - Billing (Stripe / Lemon Squeezy)
+        - AI chat / streaming
+        - AI cost observability
+        - RAG / knowledge base
+        - GDPR / data export
+        - Webhooks
+        - Cron jobs
+        - Dashboard UI
+        - Deployment (Cloudflare / Vercel)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      options:
+        - Local dev (pnpm dev)
+        - Cloudflare Pages
+        - Vercel
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Boilerplate version / commit SHA
+      placeholder: "v1.1.0 or commit abc1234"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      description: Paste relevant logs. **Redact secrets first.** Use ```backticks```.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
