@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
-    // Get the active org cookie.
+  // Get the active org cookie.
   // If missing or stale, redirect to /api/org/switch (a Route Handler, which
   // CAN set cookies) instead of calling setActiveOrgId() here — Next.js 16
   // forbids cookies().set() in Server Components during render.
