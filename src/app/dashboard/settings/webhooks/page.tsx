@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeTime } from "@/lib/utils";
-import { Plus, Webhook } from "lucide-react";
+import { Webhook, Trash2 } from "lucide-react";
+import { deleteWebhookAction } from "./actions";
+import { WebhookForm } from "./webhook-form";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +18,25 @@ export default async function WebhooksPage() {
 
   const endpoints = await prisma.webhookEndpoint.findMany({
     where: { organizationId: orgId },
-    include: {
-      _count: { select: { deliveries: true } },
-    },
+    include: { _count: { select: { deliveries: true } } },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Webhooks</h1>
-          <p className="text-muted-foreground">Outbound webhook endpoints for event delivery</p>
-        </div>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Add Endpoint
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">Webhooks</h1>
+        <p className="text-muted-foreground">Outbound webhook endpoints for event delivery</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Add Endpoint</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WebhookForm />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -44,9 +47,6 @@ export default async function WebhooksPage() {
             <div className="text-center py-8">
               <Webhook className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
               <p className="text-sm text-muted-foreground">No webhook endpoints yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Add an endpoint to receive event notifications when things happen in your org
-              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -66,6 +66,12 @@ export default async function WebhooksPage() {
                     <Badge variant={ep.isActive ? "default" : "secondary"}>
                       {ep.isActive ? "Active" : "Disabled"}
                     </Badge>
+                    <form action={deleteWebhookAction}>
+                      <input type="hidden" name="id" value={ep.id} />
+                      <Button type="submit" size="sm" variant="outline">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </form>
                   </div>
                 </div>
               ))}

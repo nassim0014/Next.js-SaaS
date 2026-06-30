@@ -4,8 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatRelativeTime } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { inviteMemberAction, removeMemberAction } from "./actions";
+import { InviteForm } from "./invite-form";
 
 export const dynamic = "force-dynamic";
 
@@ -27,16 +31,19 @@ export default async function MembersPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Members</h1>
-          <p className="text-muted-foreground">Manage who has access to this organization</p>
-        </div>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Invite
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">Members</h1>
+        <p className="text-muted-foreground">Manage who has access to this organization</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Invite Member</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InviteForm />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -55,7 +62,17 @@ export default async function MembersPage() {
                     <p className="text-xs text-muted-foreground">Joined {formatRelativeTime(m.createdAt)}</p>
                   </div>
                 </div>
-                <Badge variant={m.role === "OWNER" ? "default" : "secondary"}>{m.role}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={m.role === "OWNER" ? "default" : "secondary"}>{m.role}</Badge>
+                  {m.role !== "OWNER" && (
+                    <form action={removeMemberAction}>
+                      <input type="hidden" name="id" value={m.id} />
+                      <Button type="submit" size="sm" variant="outline">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </form>
+                  )}
+                </div>
               </div>
             ))}
           </div>
