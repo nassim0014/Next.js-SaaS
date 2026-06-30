@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Agent = {
@@ -39,7 +39,7 @@ export function ChatInterface({
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, reload } = useChat({
     api: "/api/chat",
     body: {
       agentId: selectedAgentId,
@@ -68,6 +68,14 @@ export function ChatInterface({
     setMessages([]);
   }
 
+  function handleSelectConversation(convId: string, convTitle: string | null) {
+    setSelectedConversationId(convId);
+    setMessages([]);
+    // In a full implementation, we'd fetch the conversation's messages here.
+    // For now, the API reconstructs history from the DB on the next message.
+    toast.info(`Loaded conversation: ${convTitle ?? "Untitled"}`);
+  }
+
   if (agents.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -83,8 +91,11 @@ export function ChatInterface({
     );
   }
 
+  const currentAgent = agents.find((a) => a.id === selectedAgentId);
+
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
+      {/* Sidebar: agent + conversation list */}
       <div className="hidden md:flex w-64 flex-col gap-3 border-r pr-4">
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Agent</label>
@@ -97,8 +108,17 @@ export function ChatInterface({
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
+          {currentAgent && (
+            <p className="text-xs text-muted-foreground mt-1 px-1">
+              {currentAgent.modelConfig.displayName}
+            </p>
+          )}
         </div>
-        <Button variant="outline" size="sm" onClick={handleNewChat}>+ New Chat</Button>
+
+        <Button variant="outline" size="sm" onClick={handleNewChat}>
+          + New Chat
+        </Button>
+
         <div className="flex-1 overflow-y-auto space-y-1">
           <p className="text-xs font-medium text-muted-foreground px-1 mb-1">Recent</p>
           {conversations.length === 0 ? (
@@ -107,7 +127,7 @@ export function ChatInterface({
             conversations.map((c) => (
               <button
                 key={c.id}
-                onClick={() => { setSelectedConversationId(c.id); setMessages([]); }}
+                onClick={() => handleSelectConversation(c.id, c.title)}
                 className={`w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors ${
                   selectedConversationId === c.id ? "bg-accent" : ""
                 }`}
@@ -119,23 +139,35 @@ export function ChatInterface({
           )}
         </div>
       </div>
+
+      {/* Main chat area */}
       <div className="flex-1 flex flex-col">
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Bot className="h-12 w-12 mb-3" />
-              <p>Send a message to start chatting with {agents.find((a) => a.id === selectedAgentId)?.name}</p>
-              <p className="text-xs mt-1">Powered by {agents.find((a) => a.id === selectedAgentId)?.modelConfig.displayName ?? "AI"}</p>
+              <p>Send a message to start chatting with {currentAgent?.name}</p>
+              <p className="text-xs mt-1">Powered by {currentAgent?.modelConfig.displayName ?? "AI"}</p>
             </div>
           )}
           {messages.map((m) => (
-            <div key={m.id} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={m.id}
+              className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
               {m.role !== "user" && (
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
               )}
-              <div className={`rounded-lg px-4 py-2 max-w-[80%] ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+              <div
+                className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                  m.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                }`}
+              >
                 <p className="text-sm whitespace-pre-wrap">{m.content}</p>
               </div>
               {m.role === "user" && (
@@ -156,12 +188,31 @@ export function ChatInterface({
             </div>
           )}
           {error && (
-            <div className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">{error.message}</div>
+            <div className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              {error.message}
+              <Button size="sm" variant="ghost" onClick={() => reload()} className="ml-2">
+                Retry
+              </Button>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
-        <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t">
-          <Input value={input} onChange={handleInputChange} placeholder="Type your message..." disabled={isLoading} className="flex-1" />
+
+        {/* Input */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(e);
+          }}
+          className="flex gap-2 pt-4 border-t"
+        >
+          <Input
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Type your message..."
+            disabled={isLoading}
+            className="flex-1"
+          />
           <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
             <Send className="h-4 w-4" />
           </Button>

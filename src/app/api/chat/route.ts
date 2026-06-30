@@ -7,7 +7,30 @@ import { resolveModel } from "@/lib/ai/llm";
 import { checkBudget, recordTokenUsage } from "@/lib/ai/cost";
 import { audit } from "@/lib/audit/logger";
 import { AppError, toAppError } from "@/lib/errors";
-import { sendChatMessageSchema } from "@/lib/validators/agent";
+import { z } from "zod";
+
+/**
+ * Chat API — streaming endpoint compatible with @ai-sdk/react useChat().
+ *
+ * The useChat() hook sends:
+ *   POST /api/chat
+ *   { messages: [{role, content, id}], agentId, conversationId? }
+ *
+ * We take the LAST user message as the current input, save it to the DB,
+ * build conversation history, stream the LLM response, and meter usage.
+ */
+
+const chatRequestSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant", "system", "tool"]),
+      content: z.string(),
+      id: z.string().optional(),
+    })
+  ).min(1, "At least one message is required"),
+  agentId: z.string().uuid(),
+  conversationId: z.string().uuid().optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +39,14 @@ export async function POST(req: NextRequest) {
     if (!orgId) throw new AppError("NO_ACTIVE_ORG");
 
     const body = await req.json();
-    const input = sendChatMessageSchema.parse(body);
+    const input = chatRequestSchema.parse(body);
+
+    // Extract the latest user message
+    const lastUserMsg = [...input.messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) {
+      throw new AppError("VALIDATION", "No user message found");
+    }
+    const userMessageText = lastUserMsg.content;
 
     // 1. Fetch the agent + verify it belongs to this org
     const agent = await prisma.agent.findFirst({
@@ -39,7 +69,7 @@ export async function POST(req: NextRequest) {
           organizationId: orgId,
           agentId: agent.id,
           userId: session.user.id,
-          title: input.message.slice(0, 80),
+          title: userMessageText.slice(0, 80),
         },
       });
     }
@@ -49,15 +79,16 @@ export async function POST(req: NextRequest) {
       data: {
         conversationId: conversation.id,
         role: "USER",
-        content: input.message,
+        content: userMessageText,
       },
     });
 
-    // 4. Build conversation history (last 20 messages).
-    // Skip TOOL messages — they have a different content shape and are
-    // reconstructed by the SDK from the assistant's prior tool_calls.
+    // 4. Build conversation history (last 20 messages, excluding the one we just saved)
     const history = await prisma.message.findMany({
-      where: { conversationId: conversation.id, role: { in: ["USER", "ASSISTANT", "SYSTEM"] } },
+      where: {
+        conversationId: conversation.id,
+        role: { in: ["USER", "ASSISTANT", "SYSTEM"] },
+      },
       orderBy: { createdAt: "asc" },
       take: 20,
     });
@@ -72,7 +103,10 @@ export async function POST(req: NextRequest) {
     await checkBudget(orgId);
 
     // 6. Resolve the LLM model
-    const model = resolveModel(agent.modelConfig.provider as "google" | "openai" | "anthropic" | "groq", agent.modelConfig.modelName);
+    const model = resolveModel(
+      agent.modelConfig.provider as "google" | "openai" | "anthropic" | "groq",
+      agent.modelConfig.modelName
+    );
     if (!model) {
       throw new AppError(
         "INTERNAL",
@@ -89,50 +123,56 @@ export async function POST(req: NextRequest) {
       maxTokens: agent.maxTokens,
     });
 
-    // 8. Meter usage on completion (async, fire-and-forget)
-    result.usage
-      .then(async (usage) => {
-        if (!usage) return;
+    // 8. Meter usage + save assistant message on completion (fire-and-forget)
+    // Use result.text (a promise) to get the full response, then save + meter.
+    const conversationId = conversation.id;
+    const agentModelConfig = agent.modelConfig;
+    const userId = session.user.id;
 
-        const inputTokens = "promptTokens" in usage ? usage.promptTokens : (usage as { inputTokens?: number }).inputTokens ?? 0;
-        const outputTokens = "completionTokens" in usage ? usage.completionTokens : (usage as { outputTokens?: number }).outputTokens ?? 0;
+    // Fire-and-forget: wait for the stream to finish, then persist
+    result.text
+      .then(async (fullText) => {
+        try {
+          const usage = await result.usage;
+          const inputTokens = usage?.promptTokens ?? 0;
+          const outputTokens = usage?.completionTokens ?? 0;
 
-        const costUsd =
-          (inputTokens / 1000) * agent.modelConfig!.inputCostPer1K +
-          (outputTokens / 1000) * agent.modelConfig!.outputCostPer1K;
+          const costUsd =
+            (inputTokens / 1000) * agentModelConfig.inputCostPer1K +
+            (outputTokens / 1000) * agentModelConfig.outputCostPer1K;
 
-        await recordTokenUsage({
-          organizationId: orgId,
-          userId: session.user.id,
-          conversationId: conversation!.id,
-          modelConfigId: agent.modelConfig!.id,
-          inputTokens,
-          outputTokens,
-          costUsd,
-        });
+          await recordTokenUsage({
+            organizationId: orgId,
+            userId,
+            conversationId,
+            modelConfigId: agentModelConfig.id,
+            inputTokens,
+            outputTokens,
+            costUsd,
+          });
 
-        // Save the assistant's message
-        const text = await result.text;
-        await prisma.message.create({
-          data: {
-            conversationId: conversation!.id,
-            role: "ASSISTANT",
-            content: text,
-            modelConfigId: agent.modelConfig!.id,
-            tokenCount: inputTokens + outputTokens,
-          },
-        });
+          await prisma.message.create({
+            data: {
+              conversationId,
+              role: "ASSISTANT",
+              content: fullText,
+              modelConfigId: agentModelConfig.id,
+              tokenCount: inputTokens + outputTokens,
+            },
+          });
 
-        // Update conversation cost
-        await prisma.conversation.update({
-          where: { id: conversation!.id },
-          data: {
-            tokenCount: { increment: inputTokens + outputTokens },
-            estimatedCostUsd: { increment: costUsd },
-          },
-        });
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: {
+              tokenCount: { increment: inputTokens + outputTokens },
+              estimatedCostUsd: { increment: costUsd },
+            },
+          });
+        } catch (err) {
+          console.error("[CHAT METERING FAILED]", err);
+        }
       })
-      .catch((err) => console.error("[CHAT METERING FAILED]", err));
+      .catch((err) => console.error("[CHAT STREAM FAILED]", err));
 
     // 9. Audit log
     await audit({
@@ -144,7 +184,7 @@ export async function POST(req: NextRequest) {
       metadata: { agentId: agent.id, conversationId: conversation.id },
     });
 
-    // 10. Return the stream
+    // 10. Return the stream — useChat() expects a data-stream response
     return result.toDataStreamResponse();
   } catch (err) {
     const error = toAppError(err);
