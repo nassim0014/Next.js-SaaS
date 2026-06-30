@@ -291,7 +291,7 @@ Building a custom AI SaaS? Need help architecting your multi-tenant system? I'm 
 - **Code reviews** of existing AI SaaS codebases
 - **Custom features** built on top of this boilerplate
 
-Email: `your-email@example.com` (replace this in your fork!)
+Email: nassim.kefi0014@gmail.com
 GitHub: [@nassim0014](https://github.com/nassim0014)
 
 ---
