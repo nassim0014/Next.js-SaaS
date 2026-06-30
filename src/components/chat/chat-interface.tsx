@@ -52,7 +52,14 @@ export function ChatInterface({
     streamProtocol: "data",
     onError: (err) => {
       console.error("[useChat error]", err);
-      toast.error(err.message || "Chat error — check console for details");
+      // The error message from the data stream can be generic ("An error occurred.")
+      // Show a more helpful message that tells the user to check server logs.
+      const msg = err.message || "Chat error";
+      if (msg === "An error occurred.") {
+        toast.error("The AI provider returned an error. Check the server terminal for details — look for [CHAT STREAM ERROR] in the logs.");
+      } else {
+        toast.error(msg);
+      }
     },
     onFinish: () => {
       router.refresh();

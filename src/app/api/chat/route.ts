@@ -103,21 +103,26 @@ export async function POST(req: NextRequest) {
     await checkBudget(orgId);
 
     // 6. Resolve the LLM model
-    const model = resolveModel(
-      agent.modelConfig.provider as "google" | "openai" | "anthropic" | "groq",
-      agent.modelConfig.modelName
-    );
-    if (!model) {
+    const providerName = agent.modelConfig.provider as "google" | "openai" | "anthropic" | "groq";
+    const envKeyName = { google: "GOOGLE_GENERATIVE_AI_API_KEY", openai: "OPENAI_API_KEY", anthropic: "ANTHROPIC_API_KEY", groq: "GROQ_API_KEY" }[providerName];
+    if (!process.env[envKeyName]) {
       throw new AppError(
         "INTERNAL",
-        `Provider ${agent.modelConfig.provider} not configured. Set the API key in .env.local`
+        `Provider ${providerName} API key not set. Add ${envKeyName} to .env.local`
       );
     }
 
+    const model = resolveModel(providerName, agent.modelConfig.modelName);
+    if (!model) {
+      throw new AppError(
+        "INTERNAL",
+        `Could not resolve model ${agent.modelConfig.modelName} for provider ${providerName}.`
+      );
+    }
+
+    console.log(`[CHAT] Provider: ${providerName} | Model: ${agent.modelConfig.modelName} | Agent: ${agent.name}`);
+
     // 7. Stream the response
-    // Use onFinish callback for metering — this runs AFTER the stream completes
-    // but doesn't consume it (unlike result.text which would conflict with
-    // toDataStreamResponse()).
     const conversationId = conversation.id;
     const agentModelConfig = agent.modelConfig;
     const userId = session.user.id;
@@ -128,6 +133,11 @@ export async function POST(req: NextRequest) {
       system: agent.systemPrompt ?? undefined,
       temperature: agent.temperature,
       maxTokens: agent.maxTokens,
+      onError: ({ error }) => {
+        // This captures errors that happen DURING streaming (e.g. provider
+        // returns an error mid-stream, rate limit, invalid API key, etc.)
+        console.error("[CHAT STREAM ERROR]", error);
+      },
       onFinish: async ({ text: fullText, usage }) => {
         try {
           const inputTokens = usage?.promptTokens ?? 0;
