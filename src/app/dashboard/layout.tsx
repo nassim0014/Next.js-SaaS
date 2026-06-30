@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { getActiveOrgId, getUserOrganizations, setActiveOrgId } from "@/lib/auth/org-context";
+import { getActiveOrgId, getUserOrganizations } from "@/lib/auth/org-context";
 import { dashboardNav } from "@/config/nav";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
@@ -25,25 +25,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
-  // Get or set the active org cookie
-  let activeOrgId = await getActiveOrgId();
-
-  if (!activeOrgId) {
-    // No active org cookie — set it to the first org and use it for this render.
-    // Previously this redirected to /api/org/switch, which caused a redirect loop
-    // because cookies().set() in route handlers doesn't persist across redirects.
-    // Setting it directly in the Server Component works reliably.
-    activeOrgId = orgs[0]!.organization.id;
-    await setActiveOrgId(activeOrgId);
-  }
-
-  // Verify the active org is one the user belongs to
+    // Get the active org cookie.
+  // If missing or stale, redirect to /api/org/switch (a Route Handler, which
+  // CAN set cookies) instead of calling setActiveOrgId() here — Next.js 16
+  // forbids cookies().set() in Server Components during render.
+  const activeOrgId = await getActiveOrgId();
   const activeMembership = orgs.find((m) => m.organizationId === activeOrgId);
 
   if (!activeMembership) {
-    // The cookie has a stale org ID — reset to the first org
-    activeOrgId = orgs[0]!.organization.id;
-    await setActiveOrgId(activeOrgId);
+    // No cookie, or cookie points to an org the user no longer belongs to.
+    // Redirect to the Route Handler which sets the cookie, then back here.
+    const firstOrgId = orgs[0]!.organization.id;
+    redirect(`/api/org/switch?orgId=${firstOrgId}&redirect=/dashboard`);
   }
 
   const userRole = activeMembership?.role ?? "VIEWER";
