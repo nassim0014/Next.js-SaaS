@@ -41,10 +41,11 @@ export function ChatInterface({
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, reload } = useChat({
     api: "/api/chat",
-    // Use a function so the body re-evaluates on every request (otherwise
-    // selectedConversationId is captured at initial render time)
-    prepareRequestBody: (opts) => ({
-      messages: opts.messages,
+    // Use experimental_prepareRequestBody to explicitly build the request body.
+    // The static `body` option in AI SDK v4 can get stale (captured at hook
+    // init time) and doesn't always merge correctly with the messages array.
+    experimental_prepareRequestBody: ({ messages: chatMessages }) => ({
+      messages: chatMessages,
       agentId: selectedAgentId,
       conversationId: selectedConversationId,
     }),
