@@ -115,25 +115,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 7. Stream the response
+    // Use onFinish callback for metering — this runs AFTER the stream completes
+    // but doesn't consume it (unlike result.text which would conflict with
+    // toDataStreamResponse()).
+    const conversationId = conversation.id;
+    const agentModelConfig = agent.modelConfig;
+    const userId = session.user.id;
+
     const result = streamText({
       model,
       messages,
       system: agent.systemPrompt ?? undefined,
       temperature: agent.temperature,
       maxTokens: agent.maxTokens,
-    });
-
-    // 8. Meter usage + save assistant message on completion (fire-and-forget)
-    // Use result.text (a promise) to get the full response, then save + meter.
-    const conversationId = conversation.id;
-    const agentModelConfig = agent.modelConfig;
-    const userId = session.user.id;
-
-    // Fire-and-forget: wait for the stream to finish, then persist
-    result.text
-      .then(async (fullText) => {
+      onFinish: async ({ text: fullText, usage }) => {
         try {
-          const usage = await result.usage;
           const inputTokens = usage?.promptTokens ?? 0;
           const outputTokens = usage?.completionTokens ?? 0;
 
@@ -171,10 +167,10 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           console.error("[CHAT METERING FAILED]", err);
         }
-      })
-      .catch((err) => console.error("[CHAT STREAM FAILED]", err));
+      },
+    });
 
-    // 9. Audit log
+    // 8. Audit log
     await audit({
       organizationId: orgId,
       userId: session.user.id,
@@ -184,7 +180,7 @@ export async function POST(req: NextRequest) {
       metadata: { agentId: agent.id, conversationId: conversation.id },
     });
 
-    // 10. Return the stream — useChat() expects a data-stream response
+    // 9. Return the stream — useChat() expects a data-stream response
     return result.toDataStreamResponse();
   } catch (err) {
     const error = toAppError(err);
