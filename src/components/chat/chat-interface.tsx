@@ -25,22 +25,44 @@ type Conversation = {
   createdAt: string;
 };
 
+type InitialMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+};
+
 export function ChatInterface({
   agents,
   conversations,
   orgId,
+  initialAgentId,
+  initialConversationId,
+  initialMessages,
 }: {
   agents: Agent[];
   conversations: Conversation[];
   orgId: string;
+  initialAgentId?: string;
+  initialConversationId?: string;
+  initialMessages?: InitialMessage[];
 }) {
   const router = useRouter();
-  const [selectedAgentId, setSelectedAgentId] = useState(agents[0]?.id ?? "");
-  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(undefined);
+  const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId ?? agents[0]?.id ?? "");
+  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(initialConversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, reload } = useChat({
     api: "/api/chat",
+    // Seed the chat with messages loaded for a past conversation. The AI SDK
+    // treats `initialMessages` as the starting value and will append streamed
+    // assistant replies to it when the user continues the conversation.
+    initialMessages: initialMessages?.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      createdAt: new Date(m.createdAt),
+    })),
     // Use experimental_prepareRequestBody to explicitly build the request body.
     // The static `body` option in AI SDK v4 can get stale (captured at hook
     // init time) and doesn't always merge correctly with the messages array.
@@ -72,20 +94,27 @@ export function ChatInterface({
 
   function handleAgentChange(agentId: string) {
     setSelectedAgentId(agentId);
-    setSelectedConversationId(undefined);
-    setMessages([]);
+    // Switching agents starts a fresh chat context. If we're mid-conversation
+    // we drop it by navigating to the bare chat URL, which resets selection.
+    if (selectedConversationId) {
+      router.push(`/dashboard/chat?agent=${agentId}`);
+    } else {
+      setSelectedConversationId(undefined);
+      setMessages([]);
+    }
   }
 
   function handleNewChat() {
-    setSelectedConversationId(undefined);
-    setMessages([]);
+    // Navigate to the bare chat URL — the server component resets selection
+    // and seeds `useChat` with an empty message list.
+    router.push("/dashboard/chat");
   }
 
   function handleSelectConversation(convId: string, convTitle: string | null) {
-    setSelectedConversationId(convId);
-    setMessages([]);
-    // In a full implementation, we'd fetch the conversation's messages here.
-    // For now, the API reconstructs history from the DB on the next message.
+    // Navigate so the server component loads the conversation's real messages
+    // and seeds `useChat`. Keeps the server component the single source of
+    // truth (consistent with the rest of the app) rather than fetching here.
+    router.push(`/dashboard/chat?conversation=${convId}`);
     toast.info(`Loaded conversation: ${convTitle ?? "Untitled"}`);
   }
 
