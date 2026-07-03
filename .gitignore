@@ -67,3 +67,4 @@ Thumbs.db
 
 # temp files from scaffolding
 package.json.tmp
+bun.lock
