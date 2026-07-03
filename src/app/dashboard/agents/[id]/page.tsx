@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Bot, MessageSquare, Thermometer, Hash, Settings2 } from "lucide-react";
+import { ArrowLeft, Bot, MessageSquare, Thermometer, Hash, Settings2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -62,12 +62,20 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
             Created {formatRelativeTime(agent.createdAt)}
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/dashboard/chat?agent=${agent.id}`}>
-            <MessageSquare className="h-4 w-4" />
-            Chat
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/dashboard/agents/${agent.id}/edit`}>
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/dashboard/chat?agent=${agent.id}`}>
+              <MessageSquare className="h-4 w-4" />
+              Chat
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
