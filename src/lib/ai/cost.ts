@@ -144,7 +144,7 @@ export async function getDailyUsageBreakdown(
 ): Promise<
   Array<{ date: string; tokens: number; costUsd: number; inputTokens: number; outputTokens: number }>
 > {
-  const rows = await prisma.$queryRaw<
+  const rows = await prisma.$queryRawUnsafe<
     Array<{
       date: string;
       tokens: bigint;
@@ -152,20 +152,23 @@ export async function getDailyUsageBreakdown(
       inputTokens: bigint;
       outputTokens: bigint;
     }>
-  >`
-    SELECT
-      DATE(created_at) AS date,
-      SUM(input_tokens + output_tokens) AS tokens,
-      SUM(cost_usd) AS "costUsd",
-      SUM(input_tokens) AS "inputTokens",
-      SUM(output_tokens) AS "outputTokens"
-    FROM token_usage
-    WHERE organization_id = ${organizationId}::uuid
-      AND created_at >= ${startDate}::timestamptz
-      AND created_at <= ${endDate}::timestamptz
-    GROUP BY DATE(created_at)
-    ORDER BY date ASC;
-  `;
+  >(
+    `SELECT
+       DATE(created_at) AS date,
+       SUM(input_tokens + output_tokens) AS tokens,
+       SUM(cost_usd) AS "costUsd",
+       SUM(input_tokens) AS "inputTokens",
+       SUM(output_tokens) AS "outputTokens"
+     FROM token_usage
+     WHERE organization_id = $1::uuid
+       AND created_at >= $2::timestamptz
+       AND created_at <= $3::timestamptz
+     GROUP BY DATE(created_at)
+     ORDER BY date ASC`,
+    organizationId,
+    startDate,
+    endDate
+  );
 
   return rows.map((r) => ({
     date: r.date,
@@ -193,7 +196,7 @@ export async function getUserUsageBreakdown(
     conversationCount: number;
   }>
 > {
-  const rows = await prisma.$queryRaw<
+  const rows = await prisma.$queryRawUnsafe<
     Array<{
       userId: string;
       userName: string | null;
@@ -202,22 +205,25 @@ export async function getUserUsageBreakdown(
       costUsd: number;
       conversationCount: bigint;
     }>
-  >`
-    SELECT
-      tu.user_id AS "userId",
-      u.name AS "userName",
-      u.email AS "userEmail",
-      SUM(tu.input_tokens + tu.output_tokens) AS tokens,
-      SUM(tu.cost_usd) AS "costUsd",
-      COUNT(DISTINCT tu.conversation_id) AS "conversationCount"
-    FROM token_usage tu
-    LEFT JOIN users u ON u.id = tu.user_id
-    WHERE tu.organization_id = ${organizationId}::uuid
-      AND tu.created_at >= ${startDate}::timestamptz
-      AND tu.created_at <= ${endDate}::timestamptz
-    GROUP BY tu.user_id, u.name, u.email
-    ORDER BY tokens DESC;
-  `;
+  >(
+    `SELECT
+       tu.user_id AS "userId",
+       u.name AS "userName",
+       u.email AS "userEmail",
+       SUM(tu.input_tokens + tu.output_tokens) AS tokens,
+       SUM(tu.cost_usd) AS "costUsd",
+       COUNT(DISTINCT tu.conversation_id) AS "conversationCount"
+     FROM token_usage tu
+     LEFT JOIN users u ON u.id = tu.user_id
+     WHERE tu.organization_id = $1::uuid
+       AND tu.created_at >= $2::timestamptz
+       AND tu.created_at <= $3::timestamptz
+     GROUP BY tu.user_id, u.name, u.email
+     ORDER BY tokens DESC`,
+    organizationId,
+    startDate,
+    endDate
+  );
 
   return rows.map((r) => ({
     userId: r.userId,

@@ -34,22 +34,27 @@ export async function retrieveRelevantChunks(
   const [queryEmbedding] = await generateEmbeddings([query]);
 
   // pgvector cosine similarity: `<=>` operator (smaller = more similar)
-  const results = await prisma.$queryRaw<RetrievedChunk[]>`
-    SELECT
-      e.id,
-      e.document_id AS "documentId",
-      e.content,
-      e.chunk_index AS "chunkIndex",
-      e.metadata,
-      1 - (e.embedding <=> ${queryEmbedding}::vector) AS similarity
-    FROM embeddings e
-    JOIN documents d ON d.id = e.document_id
-    WHERE d.knowledge_base_id = ${knowledgeBaseId}::uuid
-      AND d.status = 'READY'
-      AND 1 - (e.embedding <=> ${queryEmbedding}::vector) > ${minSimilarity}
-    ORDER BY e.embedding <=> ${queryEmbedding}::vector
-    LIMIT ${topK};
-  `;
+  // Use $queryRawUnsafe with positional params for reliable type casting
+  const results = await prisma.$queryRawUnsafe<RetrievedChunk[]>(
+    `SELECT
+       e.id,
+       e.document_id AS "documentId",
+       e.content,
+       e.chunk_index AS "chunkIndex",
+       e.metadata,
+       1 - (e.embedding <=> $1::vector) AS similarity
+     FROM embeddings e
+     JOIN documents d ON d.id = e.document_id
+     WHERE d.knowledge_base_id = $2::uuid
+       AND d.status = 'READY'
+       AND 1 - (e.embedding <=> $1::vector) > $3
+     ORDER BY e.embedding <=> $1::vector
+     LIMIT $4`,
+    JSON.stringify(queryEmbedding),
+    knowledgeBaseId,
+    minSimilarity,
+    topK
+  );
 
   return results;
 }
