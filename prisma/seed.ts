@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient, RoleName } from "@prisma/client";
 import { PLANS, PLAN_ORDER } from "../src/lib/billing/plans";
 import { AVAILABLE_MODELS } from "../src/config/models";
