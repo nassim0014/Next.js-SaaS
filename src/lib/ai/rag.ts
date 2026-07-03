@@ -44,7 +44,7 @@ export async function retrieveRelevantChunks(
       1 - (e.embedding <=> ${queryEmbedding}::vector) AS similarity
     FROM embeddings e
     JOIN documents d ON d.id = e.document_id
-    WHERE d.knowledge_base_id = ${knowledgeBaseId}
+    WHERE d.knowledge_base_id = ${knowledgeBaseId}::uuid
       AND d.status = 'READY'
       AND 1 - (e.embedding <=> ${queryEmbedding}::vector) > ${minSimilarity}
     ORDER BY e.embedding <=> ${queryEmbedding}::vector

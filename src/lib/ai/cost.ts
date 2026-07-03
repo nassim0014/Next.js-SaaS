@@ -160,9 +160,9 @@ export async function getDailyUsageBreakdown(
       SUM(input_tokens) AS "inputTokens",
       SUM(output_tokens) AS "outputTokens"
     FROM token_usage
-    WHERE organization_id = ${organizationId}
-      AND created_at >= ${startDate}
-      AND created_at <= ${endDate}
+    WHERE organization_id = ${organizationId}::uuid
+      AND created_at >= ${startDate}::timestamptz
+      AND created_at <= ${endDate}::timestamptz
     GROUP BY DATE(created_at)
     ORDER BY date ASC;
   `;
@@ -212,9 +212,9 @@ export async function getUserUsageBreakdown(
       COUNT(DISTINCT tu.conversation_id) AS "conversationCount"
     FROM token_usage tu
     LEFT JOIN users u ON u.id = tu.user_id
-    WHERE tu.organization_id = ${organizationId}
-      AND tu.created_at >= ${startDate}
-      AND tu.created_at <= ${endDate}
+    WHERE tu.organization_id = ${organizationId}::uuid
+      AND tu.created_at >= ${startDate}::timestamptz
+      AND tu.created_at <= ${endDate}::timestamptz
     GROUP BY tu.user_id, u.name, u.email
     ORDER BY tokens DESC;
   `;
