@@ -33,6 +33,8 @@ async function main() {
         storageQuotaMb: plan.storageQuotaMb,
         features: plan.features,
         isActive: true,
+        stripePriceIdMonthly: plan.stripePriceIdMonthly ?? null,
+        stripePriceIdYearly: plan.stripePriceIdYearly ?? null,
       },
       create: {
         slug: plan.slug,
@@ -45,6 +47,8 @@ async function main() {
         storageQuotaMb: plan.storageQuotaMb,
         features: plan.features,
         isActive: true,
+        stripePriceIdMonthly: plan.stripePriceIdMonthly ?? null,
+        stripePriceIdYearly: plan.stripePriceIdYearly ?? null,
       },
     });
   }
