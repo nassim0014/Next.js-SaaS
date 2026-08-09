@@ -10,5 +10,5 @@ import dns from "node:dns";
 
 export function setupDns() {
   dns.setDefaultResultOrder("ipv4first");
-  console.log("[instrumentation] DNS set to ipv4first ✅");
+  console.warn("[instrumentation] DNS set to ipv4first ✅");
 }

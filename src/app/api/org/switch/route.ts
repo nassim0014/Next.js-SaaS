@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
-import { getActiveOrgId, setActiveOrgId } from "@/lib/auth/org-context";
+import { setActiveOrgId } from "@/lib/auth/org-context";
 
 /**
  * Switch the active organization for the current user.

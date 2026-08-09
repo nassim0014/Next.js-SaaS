@@ -24,8 +24,6 @@ export function ExportDataButton() {
         },
       });
     }
-    // Only fire when the action state actually changes, not on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (
@@ -51,8 +49,7 @@ export function DeleteAccountButton() {
       toast.success("Your account has been deleted.");
       router.push("/login");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state, router]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     const confirmed = window.confirm(
