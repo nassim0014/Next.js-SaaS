@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatcher";
 
 /**
  * ⭐ AI COST OBSERVABILITY — THE 5TH USP
@@ -83,8 +84,9 @@ export async function checkBudget(organizationId: string): Promise<void> {
     throw new Error("BUDGET_EXCEEDED");
   }
 
-  // Fire 80% / 100% alerts (webhook + email) — implemented in lib/billing/metering.ts
-  // The check happens here; the alert dispatch happens async.
+  // Fire 80% / 100% alerts — dispatched as a "usage.budget_threshold"
+  // webhook event (see alertBudgetThreshold below). The check happens here;
+  // the alert dispatch happens async.
   if (usage.totalTokens >= quota * 0.8) {
     await alertBudgetThreshold(organizationId, usage.totalTokens, quota).catch(
       () => null
@@ -285,18 +287,37 @@ export async function getModelUsageBreakdown(
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
+/**
+ * Dispatch a "usage.budget_threshold" webhook event to every endpoint the
+ * org has subscribed to it (see lib/webhooks/dispatcher.ts). Orgs opt in the
+ * same way they do for any other event — WebhookEndpoint.events is a plain
+ * string array, there's no central registry to register this event type in.
+ *
+ * Never throws — checkBudget() already wraps this call in `.catch(() =>
+ * null)`, but guard here too since a failed alert must never block the
+ * chat stream that triggered it.
+ */
 async function alertBudgetThreshold(
   organizationId: string,
   currentTokens: number,
   quotaTokens: number
 ): Promise<void> {
-  // Dispatch a webhook event + send an email.
-  // Implementation in lib/webhooks/dispatcher.ts + lib/notifications/email.ts
-  // (Stubbed here — wire up after Phase 3 notification module)
   const percent = Math.round((currentTokens / quotaTokens) * 100);
+
   console.warn(
     `[BUDGET ALERT] Org ${organizationId} at ${percent}% of token quota (${currentTokens}/${quotaTokens})`
   );
+
+  try {
+    await dispatchWebhookEvent(organizationId, "usage.budget_threshold", {
+      organizationId,
+      currentTokens,
+      quotaTokens,
+      percent,
+    });
+  } catch (err) {
+    console.error("[BUDGET ALERT] webhook dispatch failed", err);
+  }
 }
 
 function startOfMonth(date: Date): Date {
