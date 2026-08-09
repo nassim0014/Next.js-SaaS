@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { signWebhook, verifySignature } from "@/lib/webhooks/signer";
 
 describe("webhooks/signer", () => {
-  const secret = "test-signing-secret-abc123";
+  const secret = "test-signing-secret-abc123"; // gitleaks:allow — test fixture, not a real secret
 
   it("a signature verifies against the exact payload + secret it was made with", () => {
     const payload = JSON.stringify({ event: "usage.budget_threshold", payload: { percent: 85 } });
