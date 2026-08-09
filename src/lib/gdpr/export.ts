@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit/logger";
@@ -29,29 +30,56 @@ export async function exportUserData(userId: string, organizationId: string): Pr
       prisma.dataRequest.findMany({ where: { userId, organizationId } }),
     ]);
 
-  const exportData = {
-    exportedAt: new Date().toISOString(),
-    user,
-    memberships,
-    conversations,
-    messages,
-    tokenUsage,
-    auditLogs,
-    apiKeys: apiKeys.map((k) => ({ ...k, hashedKey: "[REDACTED]" })),
-    dataRequests,
-  };
+  const redactedApiKeys = apiKeys.map((k) => ({ ...k, hashedKey: "[REDACTED]" }));
 
-  // 2. Build a JSON payload (in production, ZIP this with multiple files)
-  const json = JSON.stringify(exportData, null, 2);
-  const buffer = Buffer.from(json, "utf-8");
+  // 2. Build a ZIP with one JSON file per data category, plus a manifest.
+  //    Splitting by category (rather than one giant JSON blob) keeps each
+  //    file readable on its own and matches the "includes conversations,
+  //    messages, usage records, and audit logs" language shown on the
+  //    compliance page.
+  const zip = new JSZip();
+  const exportedAt = new Date().toISOString();
+
+  zip.file(
+    "manifest.json",
+    JSON.stringify(
+      {
+        exportedAt,
+        userId,
+        organizationId,
+        files: [
+          "user.json",
+          "memberships.json",
+          "conversations.json",
+          "messages.json",
+          "token-usage.json",
+          "audit-logs.json",
+          "api-keys.json",
+          "data-requests.json",
+        ],
+      },
+      null,
+      2
+    )
+  );
+  zip.file("user.json", JSON.stringify(user, null, 2));
+  zip.file("memberships.json", JSON.stringify(memberships, null, 2));
+  zip.file("conversations.json", JSON.stringify(conversations, null, 2));
+  zip.file("messages.json", JSON.stringify(messages, null, 2));
+  zip.file("token-usage.json", JSON.stringify(tokenUsage, null, 2));
+  zip.file("audit-logs.json", JSON.stringify(auditLogs, null, 2));
+  zip.file("api-keys.json", JSON.stringify(redactedApiKeys, null, 2));
+  zip.file("data-requests.json", JSON.stringify(dataRequests, null, 2));
+
+  const buffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 
   // 3. Upload to Supabase Storage
   const admin = supabaseAdmin();
-  const path = `gdpr-exports/${organizationId}/${userId}-${Date.now()}.json`;
+  const path = `gdpr-exports/${organizationId}/${userId}-${Date.now()}.zip`;
 
   const { error: uploadError } = await admin.storage
     .from("uploads")
-    .upload(path, buffer, { contentType: "application/json", upsert: false });
+    .upload(path, buffer, { contentType: "application/zip", upsert: false });
 
   if (uploadError) throw uploadError;
 
@@ -84,7 +112,7 @@ export async function exportUserData(userId: string, organizationId: string): Pr
     action: "EXPORT",
     resourceType: "user_data",
     resourceId: userId,
-    metadata: { format: "json", sizeBytes: buffer.length },
+    metadata: { format: "zip", sizeBytes: buffer.length },
   });
 
   return { downloadUrl: signedUrlData.signedUrl, expiresAt };
