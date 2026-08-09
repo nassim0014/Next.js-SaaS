@@ -21,7 +21,19 @@ This doc describes the security design of the boilerplate. Use it as a starting 
 - **Shared DB with `organizationId`** on every tenant-scoped table
 - **Row-Level Security** on every tenant-scoped table (defense-in-depth):
   - Even if the app layer has a bug and forgets to filter by org, the DB refuses cross-tenant reads
-  - Policies defined in `supabase/migrations/0002_rls_policies.sql`
+  - SELECT policies defined in `supabase/migrations/0002_rls_policies.sql`
+  - INSERT/UPDATE/DELETE policies defined in `supabase/migrations/0005_rls_write_policies.sql`,
+    scoped per-table to what a user should actually be able to write (org
+    members for collaborative content like agents/conversations/knowledge
+    bases, OWNER/ADMIN only for settings like webhook endpoints and
+    invitations). System-of-record tables — `audit_logs`, `billing_events`,
+    `token_usage`, `subscriptions`, `usage_records`, `webhook_events` —
+    intentionally have no user-writable policies at all; those are written
+    exclusively by server-side app logic
+  - **Bypassed by default in local/dev**: the sample `DATABASE_URL` in
+    `.env.example` includes `?pgbypassrls=true`, so none of the above is
+    actually enforced until that's removed for a production deployment —
+    see the warning in `.env.example` itself
 - **Service-role key** bypasses RLS — used only in server-side admin code (`lib/supabase/admin.ts`)
 - **Per-org query budgets** — rate-limited at the Edge Function layer
 
@@ -112,7 +124,7 @@ Document known gaps here so buyers know what to harden:
 
 ## Reporting vulnerabilities
 
-Email: **nassim@kinzoils.com**
+Email: **nassim.kefi0014@gmail.com**
 
 Please do not open public issues for security vulnerabilities. Include:
 - Affected endpoint / component
