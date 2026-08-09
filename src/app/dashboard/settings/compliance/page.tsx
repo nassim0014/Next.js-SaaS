@@ -9,7 +9,7 @@ import { ExportDataButton, DeleteAccountButton } from "./compliance-actions";
 export const dynamic = "force-dynamic";
 
 export default async function CompliancePage() {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) return null;
 
