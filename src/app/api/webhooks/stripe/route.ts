@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { verifyStripeWebhookSignature } from "@/lib/billing/stripe";
 import {
   recordBillingEvent,
