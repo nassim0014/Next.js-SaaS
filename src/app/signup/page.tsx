@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Github } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { AuthShell } from "@/components/auth-shell";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -72,12 +72,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
-      <div className="absolute inset-0 bg-brand-radial" aria-hidden="true" />
-      <Link href="/" className="relative mb-8">
-        <Logo />
-      </Link>
-      <Card className="relative w-full max-w-md duration-500 animate-in fade-in slide-in-from-bottom-2">
+    <AuthShell>
+      <Card className="w-full max-w-md duration-500 animate-in fade-in slide-in-from-bottom-2">
         <CardHeader className="text-center">
           <CardTitle>Create your account</CardTitle>
           <CardDescription>Start building for free — no credit card required</CardDescription>
@@ -193,6 +189,6 @@ export default function SignupPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }
