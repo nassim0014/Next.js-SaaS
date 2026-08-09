@@ -68,6 +68,7 @@ const config: Config = {
           "linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)))",
         "brand-radial":
           "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--gradient-from) / 0.20), transparent 70%)",
+        "dot-grid": "radial-gradient(hsl(var(--foreground) / 0.12) 1px, transparent 1px)",
       },
       borderRadius: {
         lg: "var(--radius)",
