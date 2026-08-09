@@ -51,22 +51,22 @@ export function resolveModel(
   switch (provider) {
     case "google": {
       const google = createGoogleGenerativeAI({ apiKey: key });
-      return google(modelName ?? "gemini-2.0-flash");
+      return google(modelName ?? DEFAULT_MODELS.google);
     }
     case "openai": {
       const openai = createOpenAI({ apiKey: key });
-      return openai(modelName ?? "gpt-4o");
+      return openai(modelName ?? DEFAULT_MODELS.openai);
     }
     case "anthropic": {
       const anthropic = createAnthropic({ apiKey: key });
-      return anthropic(modelName ?? "claude-3-5-sonnet-latest");
+      return anthropic(modelName ?? DEFAULT_MODELS.anthropic);
     }
     case "groq": {
       const groq = createOpenAI({
         apiKey: key,
         baseURL: "https://api.groq.com/openai/v1",
       });
-      return groq(modelName ?? "llama-3.3-70b-versatile");
+      return groq(modelName ?? DEFAULT_MODELS.groq);
     }
     default:
       return null;

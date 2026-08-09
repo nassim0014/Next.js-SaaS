@@ -36,7 +36,7 @@ describe("billing/webhooks reconcileSubscription", () => {
     });
 
     expect(upsertMock).toHaveBeenCalledTimes(1);
-    const call = upsertMock.mock.calls[0][0];
+    const call = upsertMock.mock.calls[0]![0];
 
     // The bug this regresses: create used to hardcode planId: "default-plan-id"
     // regardless of what was actually purchased.
@@ -53,7 +53,7 @@ describe("billing/webhooks reconcileSubscription", () => {
       status: "TRIALING",
     });
 
-    const call = upsertMock.mock.calls[0][0];
+    const call = upsertMock.mock.calls[0]![0];
     expect(call.where.organizationId_provider).toEqual({
       organizationId: "org-2",
       provider: "lemonsqueezy",
@@ -74,7 +74,7 @@ describe("billing/webhooks markSubscriptionStatus", () => {
     });
 
     expect(updateManyMock).toHaveBeenCalledTimes(1);
-    const call = updateManyMock.mock.calls[0][0];
+    const call = updateManyMock.mock.calls[0]![0];
     expect(call.where).toEqual({ organizationId: "org-1", provider: "stripe" });
     expect(call.data.status).toBe("CANCELED");
     expect(call.data).not.toHaveProperty("planId");

@@ -10,7 +10,7 @@ import { EditAgentForm } from "../edit-form";
 export const dynamic = "force-dynamic";
 
 export default async function EditAgentPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) return null;
 

@@ -204,6 +204,13 @@ async function main() {
   console.log("  (Use Supabase Auth to set a password for this user)");
 }
 
+// ⚠️ Keep this in sync with DEFAULT_PERMISSIONS in src/lib/auth/permissions.ts
+// — they drifted apart once already (seed was missing ADMIN's
+// "billing:manage", "members:invite", "webhooks:create"). can() checks the
+// static DEFAULT_PERMISSIONS map directly, not these seeded DB rows, but
+// getRolePermissions() reads the DB and is documented as the intended
+// production path once RBAC is fully seeded — a mismatch here is a latent
+// bug waiting for that path to be used.
 const DEFAULT_PERMISSIONS_SEED: Record<RoleName, string[]> = {
   OWNER: ["*"],
   ADMIN: [
@@ -211,9 +218,12 @@ const DEFAULT_PERMISSIONS_SEED: Record<RoleName, string[]> = {
     "conversations:*",
     "knowledge_base:*",
     "members:*",
+    "members:invite",
     "billing:read",
+    "billing:manage",
     "api_keys:*",
     "webhooks:*",
+    "webhooks:create",
     "audit_log:read",
     "usage:read",
     "compliance:*",

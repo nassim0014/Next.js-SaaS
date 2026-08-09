@@ -4,17 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatRelativeTime } from "@/lib/utils";
-import { Plus, Trash2 } from "lucide-react";
-import { inviteMemberAction, removeMemberAction } from "./actions";
+import { Trash2 } from "lucide-react";
+import { removeMemberAction } from "./actions";
 import { InviteForm } from "./invite-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function MembersPage() {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) return null;
 

@@ -3,10 +3,11 @@
 import { useChat } from "@ai-sdk/react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User, Trash2 } from "lucide-react";
+import { Send, Bot, User } from "lucide-react";
 import { toast } from "sonner";
 
 type Agent = {
@@ -35,7 +36,10 @@ type InitialMessage = {
 export function ChatInterface({
   agents,
   conversations,
-  orgId,
+  // Currently unused inside this component — kept in the props contract
+  // since callers pass it and a future feature (e.g. org-scoped realtime
+  // presence) will likely need it here.
+  orgId: _orgId,
   initialAgentId,
   initialConversationId,
   initialMessages,
@@ -127,7 +131,7 @@ export function ChatInterface({
           Create an agent first to start chatting.
         </p>
         <Button asChild>
-          <a href="/dashboard/agents/new">Create Agent</a>
+          <Link href="/dashboard/agents/new">Create Agent</Link>
         </Button>
       </Card>
     );

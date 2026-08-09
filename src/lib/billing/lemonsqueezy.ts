@@ -1,4 +1,5 @@
 import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
+import crypto from "node:crypto";
 
 /**
  * Lemon Squeezy client setup (server-only).
@@ -39,7 +40,6 @@ export function verifyLmsWebhookSignature(payload: string, signature: string): b
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
   if (!secret) throw new Error("LEMONSQUEEZY_WEBHOOK_SECRET not set");
 
-  const crypto = require("node:crypto") as typeof import("node:crypto");
   const hmac = crypto.createHmac("sha256", secret);
   hmac.update(payload);
   const digest = hmac.digest("hex");

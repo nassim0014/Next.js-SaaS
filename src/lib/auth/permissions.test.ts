@@ -13,10 +13,21 @@ describe("auth/permissions", () => {
     expect(hasPermission("ADMIN", "agents:anything")).toBe(true);
   });
 
-  it("a domain wildcard does not leak into a different domain", () => {
-    // ADMIN has "billing:read" explicitly but not "billing:*"
+  it("wildcarded and individually-granted permissions both work for the same role", () => {
+    // ADMIN has "billing:read" AND "billing:manage" granted individually
+    // (no "billing:*" wildcard exists) — both must resolve true, and an
+    // ungranted billing action must still resolve false.
     expect(hasPermission("ADMIN", "billing:read")).toBe(true);
-    expect(hasPermission("ADMIN", "billing:manage")).toBe(false);
+    expect(hasPermission("ADMIN", "billing:manage")).toBe(true);
+    expect(hasPermission("ADMIN", "billing:delete_account")).toBe(false);
+  });
+
+  it("a domain wildcard does not leak into a differently-prefixed domain", () => {
+    // "agents:*" must not match a domain that merely starts with the same
+    // letters (the colon in the "agents:" prefix check is what prevents
+    // this — see hasPermission()'s implementation).
+    expect(hasPermission("ADMIN", "agents:create")).toBe(true);
+    expect(hasPermission("ADMIN", "agentsomething:read")).toBe(false);
   });
 
   it("MEMBER only has its explicitly listed actions", () => {
