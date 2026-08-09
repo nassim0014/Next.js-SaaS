@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/config/site";
@@ -107,6 +108,10 @@ export default function MarketingHome() {
 
       {/* ── Hero ───────────────────────────────────────── */}
       <section className="relative overflow-hidden">
+        <div
+          className="absolute inset-0 bg-dot-grid opacity-40 [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]"
+          aria-hidden="true"
+        />
         <div className="absolute inset-0 bg-brand-radial" aria-hidden="true" />
         <div className="container relative flex flex-col items-center gap-6 py-24 text-center duration-700 animate-in fade-in slide-in-from-bottom-4">
           <Badge variant="secondary" className="gap-1">
@@ -119,9 +124,10 @@ export default function MarketingHome() {
             months.
           </h1>
           <p className="max-w-2xl text-lg text-muted-foreground">
-            The production-grade Next.js SaaS boilerplate. Multi-tenant. AI-native. With{" "}
-            <strong className="text-foreground">AI cost observability</strong> that prevents the
-            token-bill surprises every founder dreads.
+            A production-grade Next.js boilerplate for AI SaaS founders. Multi-tenancy, RBAC, and
+            billing are wired in from day one — plus{" "}
+            <strong className="text-foreground">AI cost observability</strong> so a runaway agent
+            never turns into a surprise bill.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg">
@@ -139,13 +145,36 @@ export default function MarketingHome() {
           </p>
 
           {/* ── Trust strip ──────────────────────────── */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
             {STATS.map((stat) => (
               <div key={stat.label} className="flex items-center gap-2">
                 <stat.icon className="h-4 w-4 text-primary" />
                 {stat.label}
               </div>
             ))}
+          </div>
+
+          {/* ── Product preview ──────────────────────── */}
+          <div className="mt-8 w-full max-w-5xl">
+            <div className="rounded-xl border bg-card p-1.5 shadow-2xl shadow-primary/10 ring-1 ring-border">
+              {/* Fake browser chrome — grounds the screenshot as "the app", not a random image */}
+              <div className="flex items-center gap-1.5 border-b px-3 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
+                <span className="ml-3 rounded-md bg-muted px-3 py-0.5 text-xs text-muted-foreground">
+                  {siteConfig.url.replace(/^https?:\/\//, "")}/dashboard/chat
+                </span>
+              </div>
+              <Image
+                src="/screenshots/chat-preview.png"
+                alt="The AI chat interface — agent picker, streaming responses, and conversation history"
+                width={1400}
+                height={560}
+                className="w-full rounded-b-[calc(0.75rem-6px)]"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -245,7 +274,11 @@ export default function MarketingHome() {
       </section>
 
       {/* ── CTA ────────────────────────────────────────── */}
-      <section className="container py-24">
+      <section className="container relative py-24">
+        <div
+          className="absolute left-1/2 top-1/2 -z-10 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30 blur-[100px]"
+          aria-hidden="true"
+        />
         <div className="rounded-2xl bg-brand-gradient p-12 text-center text-primary-foreground shadow-xl shadow-primary/20">
           <h2 className="text-3xl font-bold">Ready to ship?</h2>
           <p className="mt-3 text-primary-foreground/80">
