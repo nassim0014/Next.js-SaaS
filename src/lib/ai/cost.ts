@@ -320,10 +320,15 @@ async function alertBudgetThreshold(
   }
 }
 
-function startOfMonth(date: Date): Date {
+/**
+ * Exported for direct unit testing (pure functions, no I/O) — also used
+ * internally by getCurrentPeriodUsage() as the fallback billing period when
+ * an org has no subscription row yet.
+ */
+export function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function endOfMonth(date: Date): Date {
+export function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 }
