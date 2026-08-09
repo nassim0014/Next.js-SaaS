@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyStripeWebhookSignature, stripe } from "@/lib/billing/stripe";
+import { verifyStripeWebhookSignature } from "@/lib/billing/stripe";
 import {
   recordBillingEvent,
   reconcileSubscription,
