@@ -120,3 +120,27 @@ export async function reconcileSubscription(input: {
     },
   });
 }
+
+/**
+ * Flip an EXISTING subscription's status without touching its plan.
+ *
+ * Fits events like `customer.subscription.deleted` that carry no price/plan
+ * information and shouldn't need any — there's nothing meaningful to
+ * "reconcile" beyond the status. No-ops (rather than throwing) if the
+ * subscription row doesn't exist yet, since a delete for a subscription we
+ * never recorded isn't actionable.
+ */
+export async function markSubscriptionStatus(input: {
+  organizationId: string;
+  provider: "stripe" | "lemonsqueezy";
+  status: import("@prisma/client").SubscriptionStatus;
+  cancelAtPeriodEnd?: boolean;
+}): Promise<void> {
+  await prisma.subscription.updateMany({
+    where: { organizationId: input.organizationId, provider: input.provider },
+    data: {
+      status: input.status,
+      cancelAtPeriodEnd: input.cancelAtPeriodEnd ?? true,
+    },
+  });
+}
