@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { siteConfig } from "@/config/site";
@@ -8,6 +8,12 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -24,7 +30,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
-    images: [{ url: siteConfig.ogImage, width: 1200, height: 630 }],
     locale: "en_US",
     type: "website",
   },
@@ -32,14 +37,13 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [siteConfig.ogImage],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
         <Providers>
           {children}
           <Toaster />
