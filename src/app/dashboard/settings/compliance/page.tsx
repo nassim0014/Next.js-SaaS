@@ -2,9 +2,9 @@ import { requireUser } from "@/lib/auth/session";
 import { getActiveOrgId } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { formatRelativeTime } from "@/lib/utils";
 import { Download, Trash2, ShieldCheck } from "lucide-react";
+import { ExportDataButton, DeleteAccountButton } from "./compliance-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -43,10 +43,7 @@ export default async function CompliancePage() {
                   Download all data associated with your account as a ZIP file. Includes conversations,
                   messages, usage records, and audit logs.
                 </p>
-                <Button className="mt-3" size="sm" variant="outline">
-                  <Download className="h-4 w-4" />
-                  Request Export
-                </Button>
+                <ExportDataButton />
               </div>
             </div>
           </div>
@@ -61,10 +58,7 @@ export default async function CompliancePage() {
                   Conversations, messages, and API keys will be hard-deleted. An audit record will be
                   retained for compliance.
                 </p>
-                <Button className="mt-3" size="sm" variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                  Request Deletion
-                </Button>
+                <DeleteAccountButton />
               </div>
             </div>
           </div>
