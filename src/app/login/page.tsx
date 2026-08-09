@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Github } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { AuthShell } from "@/components/auth-shell";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -160,16 +160,12 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
-      <div className="absolute inset-0 bg-brand-radial" aria-hidden="true" />
-      <Link href="/" className="relative mb-8">
-        <Logo />
-      </Link>
-      <div className="relative duration-500 animate-in fade-in slide-in-from-bottom-2">
+    <AuthShell>
+      <div className="duration-500 animate-in fade-in slide-in-from-bottom-2">
         <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>
           <LoginForm />
         </Suspense>
       </div>
-    </div>
+    </AuthShell>
   );
 }
