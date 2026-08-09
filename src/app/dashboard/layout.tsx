@@ -5,9 +5,12 @@ import { getActiveOrgId, getUserOrganizations } from "@/lib/auth/org-context";
 import { dashboardNav } from "@/config/nav";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { can } from "@/lib/auth/rbac";
 import { OrgSwitcher } from "@/components/dashboard/org-switcher";
-import { Bot, Github, LogOut } from "lucide-react";
+import { Logo } from "@/components/logo";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Github, LogOut } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +48,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r bg-muted/30">
-        <div className="flex h-16 items-center gap-2 border-b px-6 font-bold">
-          <Bot className="h-5 w-5" />
-          {siteConfig.name}
+      <aside className="hidden w-64 flex-col border-r bg-muted/30 md:flex">
+        <div className="flex h-16 items-center border-b px-6">
+          <Logo />
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {dashboardNav.map((item) => {
@@ -103,17 +105,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
             ) : (
               <div>
                 <p className="text-xs text-muted-foreground">Organization</p>
-                <p className="font-medium text-sm">
+                <p className="text-sm font-medium">
                   {activeMembership?.organization.name ?? "Select an org"}
                 </p>
               </div>
             )}
           </div>
           <div className="flex items-center gap-3">
+            <ModeToggle />
             <span className="text-sm text-muted-foreground">{session.user.email}</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
-              {session.user.email[0]?.toUpperCase()}
-            </div>
+            <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+              <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
+                {session.user.email[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </header>
         <div className="p-6">{children}</div>

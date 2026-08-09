@@ -7,6 +7,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Send, Bot, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -53,10 +60,21 @@ export function ChatInterface({
 }) {
   const router = useRouter();
   const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId ?? agents[0]?.id ?? "");
-  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(initialConversationId);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(
+    initialConversationId
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, reload } = useChat({
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error,
+    setMessages,
+    reload,
+  } = useChat({
     api: "/api/chat",
     // Seed the chat with messages loaded for a past conversation. The AI SDK
     // treats `initialMessages` as the starting value and will append streamed
@@ -82,7 +100,9 @@ export function ChatInterface({
       // Show a more helpful message that tells the user to check server logs.
       const msg = err.message || "Chat error";
       if (msg === "An error occurred.") {
-        toast.error("The AI provider returned an error. Check the server terminal for details — look for [CHAT STREAM ERROR] in the logs.");
+        toast.error(
+          "The AI provider returned an error. Check the server terminal for details — look for [CHAT STREAM ERROR] in the logs."
+        );
       } else {
         toast.error(msg);
       }
@@ -125,9 +145,9 @@ export function ChatInterface({
   if (agents.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <Bot className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <Bot className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
         <h3 className="text-lg font-semibold">No agents yet</h3>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">
+        <p className="mb-4 mt-1 text-sm text-muted-foreground">
           Create an agent first to start chatting.
         </p>
         <Button asChild>
@@ -142,20 +162,23 @@ export function ChatInterface({
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
       {/* Sidebar: agent + conversation list */}
-      <div className="hidden md:flex w-64 flex-col gap-3 border-r pr-4">
+      <div className="hidden w-64 flex-col gap-3 border-r pr-4 md:flex">
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Agent</label>
-          <select
-            value={selectedAgentId}
-            onChange={(e) => handleAgentChange(e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Agent</label>
+          <Select value={selectedAgentId} onValueChange={handleAgentChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an agent" />
+            </SelectTrigger>
+            <SelectContent>
+              {agents.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {currentAgent && (
-            <p className="text-xs text-muted-foreground mt-1 px-1">
+            <p className="mt-1 px-1 text-xs text-muted-foreground">
               {currentAgent.modelConfig.displayName}
             </p>
           )}
@@ -165,21 +188,23 @@ export function ChatInterface({
           + New Chat
         </Button>
 
-        <div className="flex-1 overflow-y-auto space-y-1">
-          <p className="text-xs font-medium text-muted-foreground px-1 mb-1">Recent</p>
+        <div className="flex-1 space-y-1 overflow-y-auto">
+          <p className="mb-1 px-1 text-xs font-medium text-muted-foreground">Recent</p>
           {conversations.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-1">No conversations yet</p>
+            <p className="px-1 text-xs text-muted-foreground">No conversations yet</p>
           ) : (
             conversations.map((c) => (
               <button
                 key={c.id}
                 onClick={() => handleSelectConversation(c.id, c.title)}
-                className={`w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors ${
+                className={`w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent ${
                   selectedConversationId === c.id ? "bg-accent" : ""
                 }`}
               >
                 <p className="truncate">{c.title ?? "Untitled"}</p>
-                <p className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(c.createdAt).toLocaleDateString()}
+                </p>
               </button>
             ))
           )}
@@ -187,20 +212,24 @@ export function ChatInterface({
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-              <Bot className="h-12 w-12 mb-3" />
+            <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
+              <Bot className="mb-3 h-12 w-12" />
               <p>Send a message to start chatting with {currentAgent?.name}</p>
-              <p className="text-xs mt-1">Powered by {currentAgent?.modelConfig.displayName ?? "AI"}</p>
+              <p className="mt-1 text-xs">
+                Powered by {currentAgent?.modelConfig.displayName ?? "AI"}
+              </p>
             </div>
           )}
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex gap-3 duration-300 animate-in fade-in slide-in-from-bottom-2 ${
+                m.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               {m.role !== "user" && (
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -208,13 +237,11 @@ export function ChatInterface({
                 </div>
               )}
               <div
-                className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                  m.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+                <p className="whitespace-pre-wrap text-sm">{m.content}</p>
               </div>
               {m.role === "user" && (
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
@@ -224,12 +251,17 @@ export function ChatInterface({
             </div>
           ))}
           {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "user" && (
-            <div className="flex gap-3 justify-start">
+            <div className="flex justify-start gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
                 <Bot className="h-4 w-4 text-primary" />
               </div>
-              <div className="rounded-lg px-4 py-2 bg-muted">
-                <p className="text-sm text-muted-foreground">Thinking...</p>
+              <div
+                className="flex items-center gap-1 rounded-lg bg-muted px-4 py-3"
+                aria-label="Assistant is typing"
+              >
+                <span className="h-1.5 w-1.5 animate-bounce-dot rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce-dot rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce-dot rounded-full bg-muted-foreground" />
               </div>
             </div>
           )}
@@ -250,7 +282,7 @@ export function ChatInterface({
             e.preventDefault();
             handleSubmit(e);
           }}
-          className="flex gap-2 pt-4 border-t"
+          className="flex gap-2 border-t pt-4"
         >
           <Input
             value={input}
