@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`[CHAT] Provider: ${providerName} | Model: ${agent.modelConfig.modelName} | Agent: ${agent.name}`);
+    console.warn(`[CHAT] Provider: ${providerName} | Model: ${agent.modelConfig.modelName} | Agent: ${agent.name}`);
 
     // 7. Stream the response
     const conversationId = conversation.id;

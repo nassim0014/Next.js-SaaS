@@ -12,7 +12,7 @@ import { formatRelativeTime } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) return null;
 

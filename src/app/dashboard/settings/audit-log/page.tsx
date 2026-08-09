@@ -3,7 +3,6 @@ import { getActiveOrgId } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils";
-import { AuditAction } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +19,7 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 export default async function AuditLogPage() {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) return null;
 

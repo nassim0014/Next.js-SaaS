@@ -1,7 +1,6 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
 }
 
@@ -20,6 +19,11 @@ declare global {
 // single process where the instrumentation hook's setting applies.
 // =============================================================================
 try {
+  // Intentionally dynamic: must stay synchronous and catchable if
+  // node:dns doesn't exist in the current runtime (e.g. Edge). A static
+  // top-level import would fail at module-eval time instead, defeating
+  // this try/catch guard.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const dns = require("node:dns");
   dns.setDefaultResultOrder("ipv4first");
 } catch {

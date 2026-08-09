@@ -13,8 +13,8 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function NewAgentPage() {
-  const session = await requireUser();
-  const orgId = await requireActiveOrgId();
+  await requireUser();
+  await requireActiveOrgId();
 
   // Fetch available model configs (seeded globally)
   const models = await prisma.modelConfig.findMany({

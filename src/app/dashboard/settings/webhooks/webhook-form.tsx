@@ -25,7 +25,7 @@ export function WebhookForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="events">Events (comma-separated)</Label>
-        <Input id="events" name="events" placeholder="conversation.created, billing.invoice_paid" required />
+        <Input id="events" name="events" placeholder="conversation.created, billing.invoice_paid, usage.budget_threshold" required />
         <p className="text-xs text-muted-foreground">Comma-separated list of event types to subscribe to</p>
       </div>
       <Button type="submit">

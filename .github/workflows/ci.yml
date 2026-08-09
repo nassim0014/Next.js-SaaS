@@ -46,7 +46,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-        continue-on-error: true
         env:
           DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
 

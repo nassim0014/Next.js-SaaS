@@ -56,13 +56,34 @@ export async function recordBillingEvent(input: ProcessedEvent): Promise<{
 }
 
 /**
+ * Thrown when reconcileSubscription() is asked to create a brand-new
+ * Subscription but the caller couldn't resolve which Plan it's for (e.g. the
+ * Stripe Price ID on the subscription doesn't match any seeded Plan). This
+ * is always a configuration bug — a Price was added in Stripe without a
+ * matching `stripePriceIdMonthly`/`stripePriceIdYearly` on a Plan row — and
+ * should be surfaced loudly rather than silently defaulted.
+ */
+export class PlanNotFoundError extends Error {
+  constructor(context: string) {
+    super(`PLAN_NOT_FOUND_FOR_PRICE: could not resolve a Plan for ${context}`);
+    this.name = "PlanNotFoundError";
+  }
+}
+
+/**
  * Update the Subscription record based on a billing event.
  *
  * Called after `recordBillingEvent` returns `{ created: true }`.
  * Updates the subscription status, period dates, and provider IDs.
+ *
+ * `planId` is REQUIRED — the caller (e.g. the Stripe webhook route) must
+ * resolve it first via `getPlanByStripePriceId()` before calling this. There
+ * is intentionally no fallback/default plan here: writing a Subscription
+ * against the wrong (or nonexistent) plan is worse than failing loudly.
  */
 export async function reconcileSubscription(input: {
   organizationId: string;
+  planId: string;
   provider: "stripe" | "lemonsqueezy";
   providerCustomerId?: string;
   providerSubId?: string;
@@ -79,6 +100,7 @@ export async function reconcileSubscription(input: {
       },
     },
     update: {
+      planId: input.planId,
       status: input.status,
       providerCustomerId: input.providerCustomerId,
       providerSubId: input.providerSubId,
@@ -88,13 +110,37 @@ export async function reconcileSubscription(input: {
     },
     create: {
       organizationId: input.organizationId,
-      planId: "default-plan-id", // Override in caller
+      planId: input.planId,
       status: input.status,
       provider: input.provider,
       providerCustomerId: input.providerCustomerId,
       providerSubId: input.providerSubId,
       currentPeriodStart: input.currentPeriodStart,
       currentPeriodEnd: input.currentPeriodEnd,
+    },
+  });
+}
+
+/**
+ * Flip an EXISTING subscription's status without touching its plan.
+ *
+ * Fits events like `customer.subscription.deleted` that carry no price/plan
+ * information and shouldn't need any — there's nothing meaningful to
+ * "reconcile" beyond the status. No-ops (rather than throwing) if the
+ * subscription row doesn't exist yet, since a delete for a subscription we
+ * never recorded isn't actionable.
+ */
+export async function markSubscriptionStatus(input: {
+  organizationId: string;
+  provider: "stripe" | "lemonsqueezy";
+  status: import("@prisma/client").SubscriptionStatus;
+  cancelAtPeriodEnd?: boolean;
+}): Promise<void> {
+  await prisma.subscription.updateMany({
+    where: { organizationId: input.organizationId, provider: input.provider },
+    data: {
+      status: input.status,
+      cancelAtPeriodEnd: input.cancelAtPeriodEnd ?? true,
     },
   });
 }

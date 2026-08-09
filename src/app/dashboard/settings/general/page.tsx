@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
-import { getActiveOrgId, getUserOrganizations } from "@/lib/auth/org-context";
+import { getActiveOrgId } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ async function updateOrgName(formData: FormData) {
 }
 
 export default async function GeneralSettingsPage() {
-  const session = await requireUser();
+  await requireUser();
   const orgId = await getActiveOrgId();
   if (!orgId) redirect("/dashboard");
 

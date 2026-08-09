@@ -65,6 +65,11 @@ Thumbs.db
 /scripts/.cache/
 /tmp/
 
+# AI coding agent tool-output transcripts — never intentionally committed,
+# but agentic tools sometimes write session logs here; ignore by default so
+# one doesn't end up leaked into the repo again.
+/tool-results/
+
 # temp files from scaffolding
 package.json.tmp
 bun.lock
