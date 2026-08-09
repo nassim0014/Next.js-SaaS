@@ -50,6 +50,24 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+      },
+      backgroundImage: {
+        "brand-gradient":
+          "linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)))",
+        "brand-radial":
+          "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--gradient-from) / 0.20), transparent 70%)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -69,10 +87,29 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(0.75rem)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
+        bounce: {
+          "0%, 80%, 100%": { transform: "scale(0.6)", opacity: "0.5" },
+          "40%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.5s ease-out",
+        "slide-up": "slide-up 0.5s ease-out",
+        shimmer: "shimmer 2s infinite",
+        "bounce-dot": "bounce 1.4s ease-in-out infinite",
       },
     },
   },
