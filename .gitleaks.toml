@@ -1,0 +1,16 @@
+title = "gitleaks config"
+
+# Extends the default gitleaks ruleset (all standard rules stay active) and
+# adds an allowlist for reviewed-and-confirmed false positives, so we don't
+# have to rewrite git history every time a test fixture happens to look
+# high-entropy to the generic-api-key heuristic.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Reviewed false positives — test fixtures, not real secrets"
+regexes = [
+  # Hardcoded fake HMAC secret in src/lib/webhooks/signer.test.ts — not a
+  # real credential, just high-entropy enough to trip generic-api-key.
+  '''test-signing-secret-abc123''',
+]

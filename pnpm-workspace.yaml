@@ -1,3 +1,9 @@
+# NOT a monorepo config — there's no `packages:` field here, so pnpm treats
+# this repo as a single package (see package.json's single "name" field, and
+# the flat src/, prisma/, supabase/ layout — no apps/ or packages/
+# directory). This file exists solely for pnpm 10+'s build-script allowlist:
+# packages with native postinstall/build scripts (argon2, sharp, Prisma's
+# engine downloader, etc.) need explicit opt-in before pnpm will run them.
 allowBuilds:
   "@prisma/client": true
   "@prisma/engines": true

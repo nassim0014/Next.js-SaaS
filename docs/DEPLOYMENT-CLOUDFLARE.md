@@ -14,6 +14,39 @@
 | Edge network | ✅ | ✅ (faster in some regions) |
 | Next.js support | Native | Via `@opennextjs/cloudflare` |
 
+## ⚠️ Known risk: this path is unverified, not turnkey
+
+Two dependencies this boilerplate relies on are very likely incompatible
+with the Cloudflare Workers/Pages runtime, even with `nodejs_compat`
+enabled in `wrangler.toml`:
+
+- **`argon2`** (used for API-key hashing, see `docs/SECURITY.md`) is a
+  native Node addon — it ships a compiled `.node` binary built via
+  `node-gyp`/`napi`. `nodejs_compat` polyfills Node.js *APIs*; it does not
+  load compiled native addons. This will very likely fail to load (or fail
+  to build) on Cloudflare.
+- **Prisma's default query engine** (`generator client { provider =
+  "prisma-client-js" }` in `prisma/schema.prisma`, with no
+  `driverAdapters` preview feature or Prisma Accelerate configured) needs
+  its native Rust query-engine binary at runtime. That's not deployable to
+  Cloudflare Workers without switching to Driver Adapters (e.g.
+  `@prisma/adapter-pg`) or Prisma Accelerate — neither is set up here.
+  `src/lib/prisma.ts` also directly touches `node:dns` low-level APIs,
+  which are generally unsupported/no-op under `nodejs_compat`.
+- Neither `@opennextjs/cloudflare` nor `wrangler` are pinned as
+  dependencies in `package.json` — the build command below relies on `npx`
+  fetching an unpinned version of the Cloudflare adapter at deploy time,
+  so the build isn't reproducible or CI-tested the way the Vercel path is.
+
+None of this has been fixed in the codebase — doing so is a real
+architecture change (driver adapters, swapping `argon2` for a
+Workers-compatible hash, pinning the Cloudflare tooling) with its own risk
+of introducing new bugs, not something to bundle into a doc update. If you
+hit a build or runtime failure following this guide, these three points are
+the most likely cause — start there. **Vercel is the better-tested
+deployment target for this boilerplate today**; treat Cloudflare Pages as
+experimental until the above is actually addressed.
+
 ## Prerequisites
 
 1. A Cloudflare account (free): https://dash.cloudflare.com/sign-up
@@ -85,14 +118,14 @@ Cloudflare Cron Triggers fire on a schedule and hit your API routes:
 
 ## Verify the deployment
 
-- [ ] Visit `https://your-project.pages.dev/api/health/ready` → returns `{"status":"ready"}`
+- [ ] Visit `https://your-project.pages.dev/api/readyz` → returns `{"status":"ready"}`
 - [ ] Visit `https://your-project.pages.dev/` → marketing landing renders
 - [ ] Sign up + create org → redirects to `/dashboard`
 - [ ] Create an agent + chat → token usage appears in `/dashboard/usage`
 
 ## Known limitations on Cloudflare
 
-- **Edge runtime** — some Node.js modules may not work; we've kept the code Node-compatible
+- **`argon2` and Prisma's native engine** — see the risk callout above; these are the most likely source of a build or runtime failure, not a vague "some modules may not work"
 - **Build memory** — Cloudflare's build environment has 3GB RAM limit; the boilerplate fits comfortably
 - **No persistent filesystem** — files must use Supabase Storage (we already do)
 

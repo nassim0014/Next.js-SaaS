@@ -95,7 +95,7 @@ const canConnect = () =>
       socket.destroy();
       resolve(false);
     });
-    socket.on("error", (err) => {
+    socket.on("error", (_err) => {
       resolve(false);
     });
     socket.connect(port, hostname);

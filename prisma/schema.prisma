@@ -409,17 +409,24 @@ model TokenUsage {
 // =============================================================================
 
 model Plan {
-  id             String  @id @default(uuid()) @db.Uuid
-  slug           String  @unique // "starter", "pro", "enterprise"
-  name           String
-  description    String?
-  priceMonthly   Int     @map("price_monthly") // cents
-  priceYearly    Int     @map("price_yearly") // cents
-  tokenQuota     Int     @map("token_quota") // monthly token allowance, -1 for unlimited
-  seatQuota      Int     @map("seat_quota")
-  storageQuotaMb Int     @map("storage_quota_mb")
-  features       Json?
-  isActive       Boolean @default(true) @map("is_active")
+  id                   String  @id @default(uuid()) @db.Uuid
+  slug                 String  @unique // "starter", "pro", "enterprise"
+  name                 String
+  description          String?
+  priceMonthly         Int     @map("price_monthly") // cents
+  priceYearly          Int     @map("price_yearly") // cents
+  tokenQuota           Int     @map("token_quota") // monthly token allowance, -1 for unlimited
+  seatQuota            Int     @map("seat_quota")
+  storageQuotaMb       Int     @map("storage_quota_mb")
+  features             Json?
+  isActive             Boolean @default(true) @map("is_active")
+  // Stripe Price IDs — used to resolve an incoming subscription webhook back
+  // to the Plan the customer actually purchased (see lib/billing/webhooks.ts
+  // reconcileSubscription()). NULL for plans with no Stripe price yet (e.g.
+  // Free, or Enterprise "contact sales"). Populated by prisma/seed.ts from
+  // src/lib/billing/plans.ts, which reads the real IDs from env vars.
+  stripePriceIdMonthly String? @unique @map("stripe_price_id_monthly")
+  stripePriceIdYearly  String? @unique @map("stripe_price_id_yearly")
 
   subscriptions Subscription[]
 

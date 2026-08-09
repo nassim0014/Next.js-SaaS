@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyStripeWebhookSignature, stripe } from "@/lib/billing/stripe";
-import { recordBillingEvent, reconcileSubscription } from "@/lib/billing/webhooks";
+import { verifyStripeWebhookSignature } from "@/lib/billing/stripe";
+import {
+  recordBillingEvent,
+  reconcileSubscription,
+  markSubscriptionStatus,
+  PlanNotFoundError,
+} from "@/lib/billing/webhooks";
+import { getPlanByStripePriceId } from "@/lib/billing/plans";
 import type { SubscriptionStatus } from "@prisma/client";
 
 /**
@@ -71,6 +76,7 @@ export async function POST(req: NextRequest) {
           current_period_start: number;
           current_period_end: number;
           cancel_at_period_end: boolean;
+          items: { data: Array<{ price: { id: string } }> };
         };
 
         const statusMap: Record<string, SubscriptionStatus> = {
@@ -81,8 +87,19 @@ export async function POST(req: NextRequest) {
           paused: "PAUSED",
         };
 
+        // Resolve which Plan this subscription is actually for from its
+        // Stripe Price ID — never fall back to a guessed/default plan.
+        const priceId = sub.items?.data?.[0]?.price?.id;
+        const plan = priceId ? await getPlanByStripePriceId(priceId) : null;
+        if (!plan) {
+          throw new PlanNotFoundError(
+            `stripe subscription ${sub.id} (price ${priceId ?? "unknown"})`
+          );
+        }
+
         await reconcileSubscription({
           organizationId: orgId,
+          planId: plan.id,
           provider: "stripe",
           providerCustomerId: sub.customer as string,
           providerSubId: sub.id,
@@ -104,7 +121,7 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.deleted": {
-        await reconcileSubscription({
+        await markSubscriptionStatus({
           organizationId: orgId,
           provider: "stripe",
           status: "CANCELED",
