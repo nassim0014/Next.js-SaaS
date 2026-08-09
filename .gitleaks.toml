@@ -9,10 +9,8 @@ useDefault = true
 
 [allowlist]
 description = "Reviewed false positives — test fixtures, not real secrets"
-fingerprints = [
-  # A hardcoded fake HMAC secret in a unit test for lib/webhooks/signer.ts
-  # (src/lib/webhooks/signer.test.ts:5) — "test-signing-secret-abc123" is
-  # not a real credential, just happens to have enough entropy to trip
-  # the generic-api-key rule.
-  "2763a52927ce3d3ace46a9ec9d47096852809dc7:src/lib/webhooks/signer.test.ts:generic-api-key:5",
+regexes = [
+  # Hardcoded fake HMAC secret in src/lib/webhooks/signer.test.ts — not a
+  # real credential, just high-entropy enough to trip generic-api-key.
+  '''test-signing-secret-abc123''',
 ]
