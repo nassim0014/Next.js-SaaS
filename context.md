@@ -94,7 +94,7 @@ Locked-in answers from the discovery questionnaire:
 ### Request Lifecycle
 
 ```
-Client → middleware.ts (session refresh, route guard)
+Client → proxy.ts (session refresh, route guard)
        → (app)/layout.tsx (resolve active org)
        → Page / Server Action
            ├── requireUser()           (session)
@@ -135,7 +135,7 @@ saas-boilerplate/
 │   ├── lib/{supabase,ai,auth,billing,audit,gdpr,webhooks,validators}/
 │   ├── hooks/
 │   ├── types/
-│   ├── middleware.ts
+│   ├── proxy.ts
 │   └── config/
 ├── supabase/{migrations,functions,config.toml,seed.sql}
 ├── tests/{e2e,integration,unit}/
