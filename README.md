@@ -68,7 +68,10 @@ Every AI SaaS founder gets burned by unexpected token bills. Most boilerplates g
 
 ### Prerequisites
 
-- **Node.js 20+** (`node -v`)
+- **Node.js 22.13+** (`node -v`) — required by pnpm 11, which imports the
+  `node:sqlite` builtin. On Node 20 you'll get `ERR_UNKNOWN_BUILTIN_MODULE`.
+  The repo ships an `.nvmrc`, so `nvm use` picks the right version.
+- **pnpm 11+** (`corepack enable` will install the pinned version for you)
 - **A Supabase project** (free tier — [create one here](https://supabase.com/dashboard))
 - **An LLM API key** — at least one of:
   - ⭐ Google Gemini (free): https://aistudio.google.com/apikey
@@ -82,6 +85,7 @@ Every AI SaaS founder gets burned by unexpected token bills. Most boilerplates g
 # 1. Clone + install
 git clone https://github.com/nassim0014/Next.js-SaaS.git
 cd Next.js-SaaS
+nvm use          # reads .nvmrc → Node 22 (skip if you already run Node 22.13+)
 pnpm install
 
 # 2. Configure environment
