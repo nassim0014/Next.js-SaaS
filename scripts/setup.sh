@@ -15,7 +15,7 @@
 #   7. Runs the dev server
 #
 # Prerequisites:
-#   - Node.js 20+
+#   - Node.js 22.13+ (pnpm 11 needs the node:sqlite builtin — see .nvmrc)
 #   - A Supabase project (https://supabase.com)
 #   - .env.local populated with Supabase URL + anon key + service role key
 # =============================================================================
@@ -25,12 +25,17 @@ echo "🚀 Setting up Next.js SaaS Boilerplate..."
 
 # ── 1. Check Node ────────────────────────────────────────────
 if ! command -v node &> /dev/null; then
-  echo "❌ Node.js not found. Install from https://nodejs.org (v20+)"
+  echo "❌ Node.js not found. Install from https://nodejs.org (v22.13+)"
   exit 1
 fi
-NODE_VERSION=$(node -v | cut -dv -f2 | cut -d. -f1)
-if [ "$NODE_VERSION" -lt 20 ]; then
-  echo "❌ Node.js v20+ required (you have v$NODE_VERSION)"
+# pnpm 11 imports node:sqlite, a builtin that only exists from Node 22.13 —
+# on anything older `pnpm install` dies with ERR_UNKNOWN_BUILTIN_MODULE.
+NODE_MAJOR=$(node -v | cut -dv -f2 | cut -d. -f1)
+NODE_MINOR=$(node -v | cut -dv -f2 | cut -d. -f2)
+if [ "$NODE_MAJOR" -lt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 13 ]; }; then
+  echo "❌ Node.js v22.13+ required (you have $(node -v))"
+  echo "   With nvm:  nvm install 22 && nvm use 22"
+  echo "   This repo ships an .nvmrc, so plain 'nvm use' works too."
   exit 1
 fi
 echo "✅ Node.js $(node -v)"
