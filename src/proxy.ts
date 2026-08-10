@@ -2,7 +2,11 @@ import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * Middleware — runs on every request.
+ * Proxy — runs on every request.
+ *
+ * (This was `middleware.ts` until Next.js 16 deprecated that file convention
+ * in favour of `proxy.ts`. Behaviour is identical — only the file and export
+ * names changed.)
  *
  * 1. Refreshes the Supabase auth session (cookies)
  * 2. Allows public routes through
@@ -32,7 +36,7 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Refresh the Supabase session (handles chunked cookies correctly)
   const response = await updateSession(request);
 
