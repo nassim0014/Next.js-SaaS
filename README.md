@@ -158,7 +158,7 @@ Next.js-SaaS/
 │   │   ├── supabase/             # client, server, admin, middleware
 │   │   └── validators/           # Zod schemas (1:1 with Prisma)
 │   ├── components/               # ui + marketing + dashboard + providers
-│   └── middleware.ts             # Auth + org routing
+│   └── proxy.ts                  # Auth + org routing (was middleware.ts pre-Next 16)
 ├── supabase/migrations/          # RLS, audit triggers, vector index
 ├── docs/                         # ARCHITECTURE, MCP-SETUP, DEPLOYMENT, SECURITY
 └── scripts/setup.sh              # One-shot bootstrap
