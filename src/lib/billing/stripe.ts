@@ -19,7 +19,7 @@ export function stripe(): Stripe {
   }
 
   _stripe = new Stripe(key, {
-    apiVersion: "2025-02-24.acacia",
+    apiVersion: "2026-07-29.dahlia",
     typescript: true,
     appInfo: {
       name: "Next.js SaaS Boilerplate",
