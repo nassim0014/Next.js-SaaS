@@ -43,11 +43,7 @@ export default function SignupPage() {
       }
       // Signed up + auto-confirmed (e.g., when email auth is set to "no confirmation")
       toast.success("Account created!");
-      // Hard navigation — forces full page load so auth cookie is sent reliably.
-      // router.push() would keep the SPA session and can race the cookie write,
-      // which is exactly what this avoids, so the rule is suppressed rather than
-      // followed here.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      // Hard navigation — forces full page load so auth cookie is sent reliably
       window.location.href = "/dashboard";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign up failed");
