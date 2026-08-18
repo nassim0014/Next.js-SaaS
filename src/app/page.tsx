@@ -7,19 +7,8 @@ import { PLANS, PLAN_ORDER } from "@/lib/billing/plans";
 import { formatCurrency } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
-import {
-  Bot,
-  ShieldCheck,
-  Activity,
-  Webhook,
-  KeyRound,
-  ScrollText,
-  Zap,
-  Github,
-  Sparkles,
-  Layers,
-  ShieldCheckIcon,
-} from "lucide-react";
+import { Bot, ShieldCheck, Activity, Webhook, KeyRound, ScrollText, Zap, Sparkles, Layers, ShieldCheckIcon } from "lucide-react";
+import { Github } from "@/components/icons/github";
 
 const FEATURES = [
   {

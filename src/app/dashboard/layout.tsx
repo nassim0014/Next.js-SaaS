@@ -10,7 +10,8 @@ import { can } from "@/lib/auth/rbac";
 import { OrgSwitcher } from "@/components/dashboard/org-switcher";
 import { Logo } from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Github, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { Github } from "@/components/icons/github";
 
 export const dynamic = "force-dynamic";
 

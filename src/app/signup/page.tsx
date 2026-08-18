@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Github } from "lucide-react";
+
 import { AuthShell } from "@/components/auth-shell";
+import { Github } from "@/components/icons/github";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
