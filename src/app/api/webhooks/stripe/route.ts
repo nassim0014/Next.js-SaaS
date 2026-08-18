@@ -69,14 +69,23 @@ export async function POST(req: NextRequest) {
 
       case "customer.subscription.created":
       case "customer.subscription.updated": {
+        // Stripe moved current_period_start/end OFF Subscription and ONTO
+        // SubscriptionItem (API 2025-03-31 onward; see the stripe-node
+        // CHANGELOG: "Remove support for current_period_end and
+        // current_period_start on Subscription"). The billing period is now
+        // per-item, so it is read from the item below.
         const sub = event.data.object as {
           id: string;
           customer: string;
           status: string;
-          current_period_start: number;
-          current_period_end: number;
           cancel_at_period_end: boolean;
-          items: { data: Array<{ price: { id: string } }> };
+          items: {
+            data: Array<{
+              price: { id: string };
+              current_period_start: number;
+              current_period_end: number;
+            }>;
+          };
         };
 
         const statusMap: Record<string, SubscriptionStatus> = {
@@ -89,11 +98,36 @@ export async function POST(req: NextRequest) {
 
         // Resolve which Plan this subscription is actually for from its
         // Stripe Price ID — never fall back to a guessed/default plan.
-        const priceId = sub.items?.data?.[0]?.price?.id;
+        // A subscription always has at least one item; if it does not, the
+        // payload is malformed and there is no price to resolve a Plan from.
+        const item = sub.items?.data?.[0];
+        if (!item) {
+          throw new PlanNotFoundError(
+            `stripe subscription ${sub.id} (no subscription items in payload)`
+          );
+        }
+
+        const priceId = item.price?.id;
         const plan = priceId ? await getPlanByStripePriceId(priceId) : null;
         if (!plan) {
           throw new PlanNotFoundError(
             `stripe subscription ${sub.id} (price ${priceId ?? "unknown"})`
+          );
+        }
+
+        // Guard the period explicitly. `new Date(undefined * 1000)` is an
+        // Invalid Date, which Prisma would happily persist — a subscription row
+        // with a corrupt billing period fails silently and is only noticed when
+        // renewal or entitlement checks start behaving strangely. Fail the
+        // webhook instead so Stripe retries and the problem is visible.
+        if (
+          typeof item.current_period_start !== "number" ||
+          typeof item.current_period_end !== "number"
+        ) {
+          throw new Error(
+            `STRIPE_MISSING_PERIOD: subscription ${sub.id} item ${priceId} has no ` +
+              `current_period_start/end. Since API 2025-03-31 these live on the ` +
+              `subscription ITEM, not the subscription.`
           );
         }
 
@@ -104,8 +138,8 @@ export async function POST(req: NextRequest) {
           providerCustomerId: sub.customer as string,
           providerSubId: sub.id,
           status: statusMap[sub.status] ?? "ACTIVE",
-          currentPeriodStart: new Date(sub.current_period_start * 1000),
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
+          currentPeriodStart: new Date(item.current_period_start * 1000),
+          currentPeriodEnd: new Date(item.current_period_end * 1000),
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         });
 
