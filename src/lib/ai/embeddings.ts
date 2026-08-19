@@ -1,3 +1,4 @@
+import type { EmbeddingModel } from "ai";
 import { embed, embedMany } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -33,7 +34,7 @@ export async function getEmbeddingModel(provider: EmbeddingProvider = "google") 
  */
 export async function generateEmbedding(text: string, provider: EmbeddingProvider = "google") {
   const model = await getEmbeddingModel(provider);
-  const { embedding } = await embed({ model, value: text });
+  const { embedding } = await embed({ model: model as unknown as EmbeddingModel<string>, value: text });
   return padTo1536(embedding);
 }
 
@@ -46,7 +47,7 @@ export async function generateEmbeddings(
 ): Promise<number[][]> {
   if (texts.length === 0) return [];
   const model = await getEmbeddingModel(provider);
-  const { embeddings } = await embedMany({ model, values: texts });
+  const { embeddings } = await embedMany({ model: model as unknown as EmbeddingModel<string>, values: texts });
   return embeddings.map(padTo1536);
 }
 
