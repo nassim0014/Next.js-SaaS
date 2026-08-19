@@ -51,22 +51,22 @@ export function resolveModel(
   switch (provider) {
     case "google": {
       const google = createGoogleGenerativeAI({ apiKey: key });
-      return google(modelName ?? DEFAULT_MODELS.google);
+      return google(modelName ?? DEFAULT_MODELS.google) as unknown as LanguageModelV1;
     }
     case "openai": {
       const openai = createOpenAI({ apiKey: key });
-      return openai(modelName ?? DEFAULT_MODELS.openai);
+      return openai(modelName ?? DEFAULT_MODELS.openai) as unknown as LanguageModelV1;
     }
     case "anthropic": {
       const anthropic = createAnthropic({ apiKey: key });
-      return anthropic(modelName ?? DEFAULT_MODELS.anthropic);
+      return anthropic(modelName ?? DEFAULT_MODELS.anthropic) as unknown as LanguageModelV1;
     }
     case "groq": {
       const groq = createOpenAI({
         apiKey: key,
         baseURL: "https://api.groq.com/openai/v1",
       });
-      return groq(modelName ?? DEFAULT_MODELS.groq);
+      return groq(modelName ?? DEFAULT_MODELS.groq) as unknown as LanguageModelV1;
     }
     default:
       return null;
