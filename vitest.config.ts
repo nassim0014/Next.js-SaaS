@@ -8,6 +8,18 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    server: {
+      deps: {
+        // Prisma 7's @prisma/client does `require(".prisma/client/default")`.
+        // Vite's resolver does not handle that leading-dot package name under
+        // pnpm's nested store layout and fails with
+        //   Cannot find module '.prisma/client/default'
+        // Node's own resolver walks up to node_modules/.pnpm/@prisma+client@*/
+        // node_modules/.prisma and finds it, so keep these external and let
+        // Node do the resolving.
+        external: [/@prisma\/client/, /\.prisma/],
+      },
+    },
   },
   resolve: {
     alias: {

@@ -19,10 +19,11 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
 }
 
+// Prisma 7 removed `url` and `directUrl` from this block. CLI connection
+// details now live in prisma.config.ts; the runtime connection is made by the
+// driver adapter in src/lib/prisma.ts. See https://pris.ly/d/config-datasource
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
   extensions = [vector, pgcrypto]
 }
 
