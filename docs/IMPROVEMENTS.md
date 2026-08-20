@@ -26,26 +26,20 @@ cross-tenant IDOR.
 **Fix:** add a `getOrgMembership` check inside `/api/org/switch` and return 403 if the caller
 isn't a member. Cheap, closes the hole at the source instead of relying on every call site.
 
-## 2. GDPR erasure (`deleteUserData`) is eight sequential writes with no transaction
+## 2. ~~GDPR erasure (`deleteUserData`) is eight sequential writes with no transaction~~ ✅
 
-**File:** [`src/lib/gdpr/deletion.ts`](../src/lib/gdpr/deletion.ts)
+**Decision #5: Z.ai takes it.** Wrapped steps 1–7 in a single
+`prisma.$transaction(async (tx) => { ... })` — the database now either
+sees the fully-erased state or the original state, never the
+half-erased, unreconcilable state. Each `prisma.*` call inside the
+transaction uses the `tx` client instead of the top-level `prisma`
+client. Step 8 (Supabase Auth deletion) stays outside the transaction
+(external call, can't join a Postgres transaction); its `throw error`
+behavior is preserved so a failure there surfaces to the caller.
 
-Steps 1–7 (delete conversations, anonymize `TokenUsage`, delete API keys, delete memberships,
-create the `DataRequest` audit record, write the audit log, anonymize the `User` row) are each
-awaited independently with no `prisma.$transaction(...)` wrapper. If step 4 or 5 throws — a
-constraint violation, a DB blip — the user's conversation history and API keys are already
-gone, but there is no `DataRequest` record and no audit log entry showing an erasure happened,
-and the `User` row is never anonymized. That is exactly the half-erased, unreconcilable state a
-GDPR erasure implementation must not be able to reach.
-
-**Fix:** wrap steps 1–7 (the pure-Postgres steps) in one `prisma.$transaction`. Step 8
-(`supabaseAdmin().auth.admin.deleteUser`) is an external call and can't join that transaction —
-keep it last, and if it fails, log loudly rather than silently swallowing (currently it does
-`throw error`, which is correct, but nothing catches it upstream to alert an operator that a
-user is DB-erased but still has a live Supabase Auth session).
-
-This touches a database write path — flagged per the loop's own escalation rule, whoever picks
-this up should hand it to the higher-reasoning model rather than free-handing it.
+Same shape as #55 (org-switch IDOR fix): the fix is small, focused,
+and verifiable by inspection — the transaction wrapper is the only
+structural change.
 
 ## 3. GDPR and audit-log code have zero test coverage
 
