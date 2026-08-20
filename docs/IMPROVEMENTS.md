@@ -61,19 +61,21 @@ throw to the caller.
 is more involved. The deletion + audit coverage is the higher-value
 slice (audit never-throws contract + transaction atomicity).
 
-## 4. Webhook permanent-failure has no operator-visible signal
+## 4. ~~Webhook permanent-failure has no operator-visible signal~~ ✅
 
-**File:** [`src/lib/webhooks/retry.ts`](../src/lib/webhooks/retry.ts)
+Added a "Permanently Failed Deliveries" section to the
+`dashboard/settings/webhooks` page. When webhook events exceed
+`MAX_ATTEMPTS` (6 retries over ~33 hours), they're now surfaced in a
+destructive-styled card at the top of the page — showing event type,
+endpoint URL, attempt count, and when the failure happened.
 
-`scheduleRetry` gives up after `MAX_ATTEMPTS` (6 tries over ~33 hours) and marks the event
-`FAILED` — but the only signal that happens is `console.warn(...)`, whose comment literally says
-"admin should investigate." Nothing surfaces that in the dashboard or notifies the org. An
-org's webhook silently stops delivering and no one finds out short of reading server logs.
+The Prisma query includes failed deliveries (`status: "FAILED"`) in the
+existing `webhookEndpoint.findMany` call, so no extra DB round-trip is
+needed. The card only renders when `totalFailed > 0` — zero failures
+means zero visual noise.
 
-**Fix:** at minimum, surface permanently-failed `WebhookEvent`s in the existing
-`dashboard/settings/webhooks` page (a count/badge is enough for a first pass); a follow-up could
-email the org owner. Keep this PR to the surfacing step only — notification delivery is a
-separate, larger piece.
+Notification delivery (email/Slack) deferred as a separate piece per
+the backlog note.
 
 ## 5. `pnpm test:e2e` has nothing to run
 
