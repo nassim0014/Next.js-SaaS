@@ -1,44 +1,49 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 // Mock the Prisma transaction: capture the callback so we can inspect it,
 // and mock each tx.* method the deletion calls inside the transaction.
-const txMocks: Record<string, ReturnType<typeof vi.fn>> = {
-  deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
-  updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-  update: vi.fn().mockResolvedValue({}),
-  create: vi.fn().mockResolvedValue({}),
+const deleteManyMock: Mock = vi.fn().mockResolvedValue({ count: 0 })
+const updateManyMock: Mock = vi.fn().mockResolvedValue({ count: 0 })
+const updateMock: Mock = vi.fn().mockResolvedValue({})
+const createMock: Mock = vi.fn().mockResolvedValue({})
+
+const txMocks = {
+  deleteMany: deleteManyMock,
+  updateMany: updateManyMock,
+  update: updateMock,
+  create: createMock,
 }
 
-const $transactionMock = vi.fn(async (cb: (tx: typeof txMocks) => Promise<void>) => {
+const $transactionMock: Mock = vi.fn(async (cb: (tx: typeof txMocks) => Promise<void>) => {
   await cb(txMocks)
 })
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    $transaction: (...args: unknown[]) => $transactionMock(...args),
-    conversation: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...args) },
-    tokenUsage: { updateMany: (...args: unknown[]) => txMocks.updateMany(...args) },
-    apiKey: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...args) },
-    membership: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...args) },
-    dataRequest: { create: (...args: unknown[]) => txMocks.create(...args) },
-    user: { update: (...args: unknown[]) => txMocks.update(...args) },
+    $transaction: (...args: unknown[]) => $transactionMock(...(args as [])),
+    conversation: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
+    tokenUsage: { updateMany: (...args: unknown[]) => txMocks.updateMany(...(args as [])) },
+    apiKey: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
+    membership: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
+    dataRequest: { create: (...args: unknown[]) => txMocks.create(...(args as [])) },
+    user: { update: (...args: unknown[]) => txMocks.update(...(args as [])) },
   },
   Prisma: { JsonNull: null },
 }))
 
 // Mock the audit logger — it's called inside the transaction
-const auditMock = vi.fn().mockResolvedValue(undefined)
+const auditMock: Mock = vi.fn().mockResolvedValue(undefined)
 vi.mock("@/lib/audit/logger", () => ({
-  audit: (...args: unknown[]) => auditMock(...args),
+  audit: (...args: unknown[]) => auditMock(...(args as [])),
 }))
 
 // Mock supabase admin
-const deleteUserMock = vi.fn().mockResolvedValue({ error: null })
+const deleteUserMock: Mock = vi.fn().mockResolvedValue({ error: null })
 vi.mock("@/lib/supabase/admin", () => ({
   supabaseAdmin: () => ({
     auth: {
       admin: {
-        deleteUser: (...args: unknown[]) => deleteUserMock(...args),
+        deleteUser: (...args: unknown[]) => deleteUserMock(...(args as [])),
       },
     },
   }),
@@ -48,11 +53,14 @@ const { deleteUserData } = await import("@/lib/gdpr/deletion");
 
 describe("gdpr/deletion — transaction wrapper (item 2)", () => {
   beforeEach(() => {
-    Object.values(txMocks).forEach((m) => m.mockClear());
-    $transactionMock.mockClear();
-    auditMock.mockClear();
-    deleteUserMock.mockClear();
-    deleteUserMock.mockResolvedValue({ error: null });
+    deleteManyMock.mockClear()
+    updateManyMock.mockClear()
+    updateMock.mockClear()
+    createMock.mockClear()
+    $transactionMock.mockClear()
+    auditMock.mockClear()
+    deleteUserMock.mockClear()
+    deleteUserMock.mockResolvedValue({ error: null })
   })
 
   it("wraps steps 1-7 in a single prisma.$transaction", async () => {
@@ -64,10 +72,9 @@ describe("gdpr/deletion — transaction wrapper (item 2)", () => {
   it("deletes conversations inside the transaction", async () => {
     await deleteUserData("user-1", "org-1");
 
-    // tx.conversation.deleteMany should have been called
-    expect(txMocks.deleteMany).toHaveBeenCalled();
+    expect(deleteManyMock).toHaveBeenCalled();
     // Verify it was called with userId + organizationId
-    const firstCall = txMocks.deleteMany.mock.calls[0]![0];
+    const firstCall = deleteManyMock.mock.calls[0]![0];
     expect(firstCall.where).toMatchObject({
       userId: "user-1",
       organizationId: "org-1",
@@ -77,9 +84,9 @@ describe("gdpr/deletion — transaction wrapper (item 2)", () => {
   it("anonymizes TokenUsage inside the transaction", async () => {
     await deleteUserData("user-1", "org-1");
 
-    expect(txMocks.updateMany).toHaveBeenCalled();
+    expect(updateManyMock).toHaveBeenCalled();
     // TokenUsage is the first updateMany call — userId set to null
-    const tokenUsageCall = txMocks.updateMany.mock.calls[0]![0];
+    const tokenUsageCall = updateManyMock.mock.calls[0]![0];
     expect(tokenUsageCall.where).toMatchObject({
       userId: "user-1",
       organizationId: "org-1",
@@ -90,8 +97,8 @@ describe("gdpr/deletion — transaction wrapper (item 2)", () => {
   it("creates a DataRequest audit record inside the transaction", async () => {
     await deleteUserData("user-1", "org-1");
 
-    expect(txMocks.create).toHaveBeenCalled();
-    const createCall = txMocks.create.mock.calls[0]![0];
+    expect(createMock).toHaveBeenCalled();
+    const createCall = createMock.mock.calls[0]![0];
     expect(createCall.data.type).toBe("DELETION");
     expect(createCall.data.status).toBe("COMPLETED");
     expect(createCall.data.organizationId).toBe("org-1");
@@ -101,8 +108,8 @@ describe("gdpr/deletion — transaction wrapper (item 2)", () => {
   it("anonymizes the User record inside the transaction", async () => {
     await deleteUserData("user-1", "org-1");
 
-    expect(txMocks.update).toHaveBeenCalled();
-    const updateCall = txMocks.update.mock.calls[0]![0];
+    expect(updateMock).toHaveBeenCalled();
+    const updateCall = updateMock.mock.calls[0]![0];
     expect(updateCall.where).toEqual({ id: "user-1" });
     expect(updateCall.data.email).toContain("anonymized+");
     expect(updateCall.data.email).toContain("@deleted.local");
