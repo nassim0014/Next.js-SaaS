@@ -41,23 +41,25 @@ Same shape as #55 (org-switch IDOR fix): the fix is small, focused,
 and verifiable by inspection — the transaction wrapper is the only
 structural change.
 
-## 3. GDPR and audit-log code have zero test coverage
+## 3. ~~GDPR and audit-log code have zero test coverage~~ ✅
 
-**Files:** [`src/lib/gdpr/deletion.ts`](../src/lib/gdpr/deletion.ts),
-[`src/lib/gdpr/export.ts`](../src/lib/gdpr/export.ts),
-[`src/lib/audit/logger.ts`](../src/lib/audit/logger.ts)
+Added tests for `audit()` (7 tests in `src/lib/audit/logger.test.ts`)
+and `deleteUserData()` (8 tests in `src/lib/gdpr/deletion.test.ts`).
 
-Only 4 of ~30 files under `src/lib/` have a `.test.ts` next to them
-(`ai/cost`, `billing/webhooks`, `webhooks/signer`, `auth/permissions`) — and none of them are
-the two areas this boilerplate advertises as compliance-grade: GDPR erasure/export and the
-"immutable audit trail on every mutation" (per `context.md`, USP 1). A regression here is the
-kind that looks fine until an actual data-subject request or audit surfaces it.
+**audit() tests:** verifies all fields are populated, ipAddress/userAgent
+auto-populated from headers, provided values override headers, null
+defaults, and the critical "never throws" contract (swallows DB errors
+and logs to console).
 
-**Fix:** add unit tests for `deleteUserData`/`exportUserData` (mock Prisma + Supabase admin,
-assert every table listed in the file's own "what gets DELETED / ANONYMIZED / HARD-DELETED"
-comment is actually touched) and for `audit()` (assert it never throws in a way that could abort
-the calling mutation, and that required fields are always present). Natural to pair with item 2
-if the same PR adds the transaction.
+**deleteUserData() tests:** verifies the `prisma.$transaction` wrapper
+from item 2 — confirms steps 1-7 run inside the transaction (conversation
+delete, TokenUsage anonymize, DataRequest create, User anonymize, audit
+log), step 8 (Supabase Auth deletion) runs after, and Auth failures
+throw to the caller.
+
+`exportUserData` tests deferred — it needs a Supabase Storage mock which
+is more involved. The deletion + audit coverage is the higher-value
+slice (audit never-throws contract + transaction atomicity).
 
 ## 4. Webhook permanent-failure has no operator-visible signal
 
