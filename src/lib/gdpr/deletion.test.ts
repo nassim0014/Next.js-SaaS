@@ -1,32 +1,29 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
-// Mock the Prisma transaction: capture the callback so we can inspect it,
-// and mock each tx.* method the deletion calls inside the transaction.
+// Mock the Prisma transaction: capture the callback so we can inspect it.
+// The tx object passed to the callback has the same model-prefixed structure
+// as prisma (tx.conversation.deleteMany, tx.tokenUsage.updateMany, etc).
 const deleteManyMock: Mock = vi.fn().mockResolvedValue({ count: 0 })
 const updateManyMock: Mock = vi.fn().mockResolvedValue({ count: 0 })
 const updateMock: Mock = vi.fn().mockResolvedValue({})
 const createMock: Mock = vi.fn().mockResolvedValue({})
 
-const txMocks = {
-  deleteMany: deleteManyMock,
-  updateMany: updateManyMock,
-  update: updateMock,
-  create: createMock,
+const txClient = {
+  conversation: { deleteMany: (...args: unknown[]) => deleteManyMock(...(args as [])) },
+  tokenUsage: { updateMany: (...args: unknown[]) => updateManyMock(...(args as [])) },
+  apiKey: { deleteMany: (...args: unknown[]) => deleteManyMock(...(args as [])) },
+  membership: { deleteMany: (...args: unknown[]) => deleteManyMock(...(args as [])) },
+  dataRequest: { create: (...args: unknown[]) => createMock(...(args as [])) },
+  user: { update: (...args: unknown[]) => updateMock(...(args as [])) },
 }
 
-const $transactionMock: Mock = vi.fn(async (cb: (tx: typeof txMocks) => Promise<void>) => {
-  await cb(txMocks)
+const $transactionMock: Mock = vi.fn(async (cb: (tx: typeof txClient) => Promise<void>) => {
+  await cb(txClient)
 })
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     $transaction: (...args: unknown[]) => $transactionMock(...(args as [])),
-    conversation: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
-    tokenUsage: { updateMany: (...args: unknown[]) => txMocks.updateMany(...(args as [])) },
-    apiKey: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
-    membership: { deleteMany: (...args: unknown[]) => txMocks.deleteMany(...(args as [])) },
-    dataRequest: { create: (...args: unknown[]) => txMocks.create(...(args as [])) },
-    user: { update: (...args: unknown[]) => txMocks.update(...(args as [])) },
   },
   Prisma: { JsonNull: null },
 }))
