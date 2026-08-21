@@ -77,20 +77,19 @@ means zero visual noise.
 Notification delivery (email/Slack) deferred as a separate piece per
 the backlog note.
 
-## 5. `pnpm test:e2e` has nothing to run
+## 5. ~~`pnpm test:e2e` has nothing to run~~ ✅
 
-**File:** `package.json` (`"test:e2e": "playwright test"`)
+Added a minimal Playwright config + smoke spec so the advertised
+"E2E: Playwright" capability is real.
 
-`context.md` and the README both list Playwright as the E2E strategy, but there is no
-`playwright.config.ts` and no `*.spec.ts` anywhere in the repo — the script either errors ("no
-config found") or silently no-ops depending on the Playwright version. Either claim is currently
-false: there is no E2E coverage.
-
-**Fix:** either (a) add a minimal Playwright config plus one smoke spec (sign up or log in →
-land on `/dashboard`) so the advertised capability is real, or (b) if E2E is intentionally
-deferred, remove the script and the "E2E: Playwright" line from `context.md`'s bonus-context
-table so the docs stop overselling. (a) is more valuable given this is a boilerplate other
-people build on and the promise is part of its pitch.
+- **`playwright.config.ts`**: standard config with chromium project,
+  `webServer` that runs `pnpm dev` and waits for `:3000`. Reuses
+  existing dev server in local runs; starts a fresh one in CI.
+- **`tests/e2e/smoke.spec.ts`**: two tests — (1) landing page loads and
+  shows a title without an error state, (2) login page is reachable
+  and renders the email input.
+- `@playwright/test` was already in devDependencies — no package.json
+  change needed.
 
 ---
 
