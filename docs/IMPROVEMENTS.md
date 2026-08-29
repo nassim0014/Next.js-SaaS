@@ -91,6 +91,71 @@ Added a minimal Playwright config + smoke spec so the advertised
 - `@playwright/test` was already in devDependencies — no package.json
   change needed.
 
+## 6. `src/lib/billing/metering.ts` has zero test coverage   `source: coverage`
+
+Filed by the repo-backlog-refresh loop, 2026-08-29. `src/lib/billing/`
+has one test file (`webhooks.test.ts`); `metering.ts` has none. It holds
+three functions on the billing hot path:
+
+- **`hasExceededQuota(orgId, planSlug)`** — called by the chat route to
+  gate every AI request against the plan's monthly token quota. A wrong
+  boolean here either lets free-tier users run unbounded inference or
+  locks paying customers out mid-conversation. It reads
+  `getCurrentPeriodUsage()` (which *is* tested, in `ai/cost.test.ts`) and
+  compares against `PLANS[planSlug].tokenQuota`, with `-1` meaning
+  unlimited.
+- **`rollupCurrentPeriod(orgId)`** — the nightly `usageRecord.upsert`
+  that every usage report and overage charge is derived from. The
+  "idempotent via unique constraint" claim in its docstring is untested.
+- **`getQuotaPercentage(orgId, planSlug)`** — only `tokenQuota === -1` is
+  special-cased. A plan row with `tokenQuota === 0` yields
+  `Math.round(n / 0)` → `Infinity`/`NaN` rather than a clean 0-or-100.
+  All seeded plans currently have positive or `-1` quotas, so this is
+  latent, but a test would pin the contract.
+
+Add a test file with a mocked `getCurrentPeriodUsage` and the real
+`PLANS` table: quota-not-exceeded, quota-exactly-met (`>=` boundary),
+unlimited plan, and the `getQuotaPercentage` zero-quota edge. Pure logic,
+no DB — same shape as `ai/cost.test.ts`.
+
+## 7. `src/lib/webhooks/dispatcher.ts` has zero test coverage   `source: coverage`
+
+`signer.ts` and `retry.ts` both have test files; `dispatcher.ts` — the
+seam that ties them together — has none. `dispatchWebhookEvent()` does
+the endpoint lookup (`isActive`, `events: { has: eventType }` filter),
+and `deliver()` creates the `WebhookEvent` row, signs the body, POSTs
+with a 10s `AbortSignal.timeout`, and drives the status transitions
+(`PENDING` → `DELIVERED` / `FAILED` + `attempts` increment +
+`scheduleRetry`). None of that branching is exercised.
+
+Worth covering because it is the untested half of the webhook-reliability
+work that items 4 and 5 (and open PR #70) invested in: the retry logic is
+only correct if `deliver()` records `attempts` and `status` the way
+`scheduleRetry()` expects. Test with a mocked `fetch` and `prisma`:
+2xx path, non-2xx path, thrown/timeout path, and the "no subscribed
+endpoints → no-op" early return.
+
+## 8. `src/lib/ai/rag.ts` has zero coverage — `chunkDocument` can infinite-loop   `source: coverage`
+
+`rag.ts` (RAG retrieval + context formatting + document chunking) has no
+test file. Beyond the missing coverage there is a concrete defect:
+
+`chunkDocument(text, chunkSize = 2000, overlap = 200)` advances the
+cursor with `i += chunkSize - overlap` and has no guard that
+`overlap < chunkSize` (`rag.ts:82-90`). Any caller passing
+`overlap >= chunkSize` — or swapping the two positional args — makes the
+step `<= 0`, so the `while (i < text.length)` loop never terminates and
+`chunks` grows without bound until the process is killed. The defaults
+are safe, so this is dormant today, but it is an un-validated public
+function that feeds the ingestion pipeline.
+
+Fix: clamp/validate (`if (overlap >= chunkSize) throw` or
+`Math.max(1, chunkSize - overlap)`), then add tests — the chunking guard,
+short-text-single-chunk, overlap correctness, and `formatContextForPrompt`
+with zero and N chunks (pure functions, no DB).
+
+Loop-Agent: backlog-refresh / claude / laptop
+
 ---
 
 **Notes for future cycles:** nothing here needed the owner's judgement to identify, but item 2
