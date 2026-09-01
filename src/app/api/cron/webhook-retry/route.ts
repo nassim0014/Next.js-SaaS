@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEventsForRetry } from "@/lib/webhooks/retry";
+import { getEventsForRetry, scheduleRetry } from "@/lib/webhooks/retry";
 import { prisma } from "@/lib/prisma";
 import { signWebhook } from "@/lib/webhooks/signer";
 import { safeCompare } from "@/lib/crypto";
@@ -69,6 +69,12 @@ export async function GET(req: NextRequest) {
             attempts: { increment: 1 },
           },
         });
+        // Schedule the next attempt with exponential backoff, or mark the
+        // event permanently failed once MAX_ATTEMPTS is exceeded. Without
+        // this, nextRetryAt keeps its stale past value and getEventsForRetry()
+        // re-selects the event on every 5-minute tick forever — no backoff,
+        // no cutoff. Mirrors dispatcher.ts's deliver().
+        await scheduleRetry(event.id);
       }
     } catch {
       await prisma.webhookEvent.update({
@@ -78,6 +84,7 @@ export async function GET(req: NextRequest) {
           attempts: { increment: 1 },
         },
       });
+      await scheduleRetry(event.id);
     }
   }
 

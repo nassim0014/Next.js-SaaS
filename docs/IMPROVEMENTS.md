@@ -4,27 +4,65 @@ Created by the closed-improvement-loop's first visit to this repo (2026-08-19). 
 impact; each item is scoped to be one reviewable PR. Pick the top unblocked item on future
 cycles rather than the easiest one.
 
-## 1. `/api/org/switch` sets the active-org cookie without verifying membership
+**Status (2026-08-27):** items 1–5 are done. Open, in priority order: **7** (rate limiting —
+top pick next cycle), then **8** (parallelise the webhook-retry cron). Item 6 was found and
+fixed this cycle.
 
-**File:** [`src/app/api/org/switch/route.ts`](../src/app/api/org/switch/route.ts)
+## 1. ~~`/api/org/switch` sets the active-org cookie without verifying membership~~ ✅
 
-Both `GET` and `POST` call `setActiveOrgId(orgId)` straight from the query string / request
-body — there is no `getOrgMembership(user.id, orgId)` check before the cookie is set. Any
-authenticated user can point their `active-org-id` cookie at an organization they do not
-belong to.
+**Done in PR #55** (`fix: verify org membership in /api/org/switch before setting cookie`,
+commit `c31bbcb`, 2026-08-19). Both `GET` and `POST` now call
+`getOrgMembership(session.user.id, orgId)` and return 403 when the caller is not a member.
 
-This is not (as far as this pass could confirm) an active data leak: the two consumers this
-pass read — [`webhooks/actions.ts`](../src/app/dashboard/settings/webhooks/actions.ts) and the
-GDPR compliance actions — both re-check membership or scope every query by `session.user.id`
-*and* `organizationId` together, so a forged org id currently resolves to "no matching rows"
-rather than someone else's data. But that safety is incidental, not designed: it depends on
-every future Server Action remembering to re-verify membership itself, and `rbac.ts`/
-`org-context.ts` provide no helper that forces that. One new action written the way
-`requireActiveOrgId()`'s own doc comment implies ("just call this, you're scoped") is a
-cross-tenant IDOR.
+> **Backlog-bookkeeping note (2026-08-27):** this item was fixed on 2026-08-19 but never
+> ticked off here, so a later cycle would have re-done work already merged. Same rot pattern
+> the btc-llm-sentiment registry notes warn about. Before starting any item, `grep` the code
+> for the described symptom and check `git log -S` on the named file first.
 
-**Fix:** add a `getOrgMembership` check inside `/api/org/switch` and return 403 if the caller
-isn't a member. Cheap, closes the hole at the source instead of relying on every call site.
+## 6. `/api/cron/webhook-retry` never scheduled the next attempt on a failed retry ✅
+
+**File:** [`src/app/api/cron/webhook-retry/route.ts`](../src/app/api/cron/webhook-retry/route.ts)
+
+**Done this cycle (2026-08-27).** The cron handler updated the `WebhookEvent` to `FAILED` and
+incremented `attempts`, but — unlike `dispatcher.ts`'s `deliver()` — never called
+`scheduleRetry(event.id)`. `scheduleRetry` is the only thing that (a) computes the next
+`nextRetryAt` on the 1m→5m→30m→2h→6h→24h backoff ladder and (b) marks the event permanently
+failed (`nextRetryAt: null`, `[WEBHOOK PERMANENT FAILURE]` log) once `attempts >= 6`.
+
+Because `getEventsForRetry()` selects `status: FAILED AND nextRetryAt <= now`, a failed retry
+left `nextRetryAt` at its stale past value, so the event was re-tried **every 5 minutes
+forever** — no backoff, no cutoff — hammering a dead endpoint indefinitely and unbounded-
+incrementing `attempts`. The first failure (via `deliver()`) was scheduled correctly; every
+subsequent one via the cron was not.
+
+**Fix:** call `await scheduleRetry(event.id)` after both `FAILED` updates in the cron loop,
+mirroring `deliver()`. Added `src/app/api/cron/webhook-retry/route.test.ts` (5 tests) — the two
+failure-path tests fail against the pre-fix handler (verified by `git stash`).
+
+## 7. No rate limiting anywhere in the app
+
+`src/lib/errors.ts` defines `RATE_LIMITED` / HTTP 429, but nothing in the codebase ever throws
+it (`grep -rin "rate.?limit" src/` finds only the enum). Unprotected:
+
+- **`/api/chat`** — every request costs real LLM tokens. `checkBudget(orgId)` caps *monthly*
+  spend but nothing caps request *rate*, so a single client can burn a month's budget in
+  minutes and rack up provider bills before the cap trips.
+- **`/api/org/switch`**, **auth callbacks**, **API-key creation** — no throttle on abuse /
+  enumeration.
+
+**Suggested:** a small fixed-window limiter keyed by user id (or IP for unauthenticated
+routes), backed by the existing Postgres or a lightweight KV. Scope the first PR to `/api/chat`
+only — highest cost, clearest key (org id) — and leave the rest ranked.
+
+## 8. `webhook-retry` cron delivers sequentially with a 10s timeout per event
+
+**File:** [`src/app/api/cron/webhook-retry/route.ts`](../src/app/api/cron/webhook-retry/route.ts)
+
+`getEventsForRetry()` returns up to 50 events; the cron `await fetch`es them one at a time,
+each with `AbortSignal.timeout(10_000)`. 50 slow/dead endpoints ⇒ up to 500s wall time, past
+typical serverless function limits — the batch gets killed mid-loop and the tail never
+processes. `dispatcher.ts` already fans out with `Promise.allSettled`; the cron should too
+(bounded concurrency, e.g. 10).
 
 ## 2. ~~GDPR erasure (`deleteUserData`) is eight sequential writes with no transaction~~ ✅
 
@@ -162,3 +200,7 @@ Loop-Agent: backlog-refresh / claude / laptop
 (and the transaction wrapping in item 3) is a database-write-path change — per this loop's own
 rules, escalate that piece to the higher-reasoning model rather than implementing it directly on
 the cheap tier.
+
+Item 6 (2026-08-27) also touches a DB write path (`WebhookEvent` updates) but the fix is a
+one-line mirror of the already-correct `deliver()` path and is pinned by unit tests, so it was
+done on the cheap tier and its PR left open for human review rather than auto-merged.
