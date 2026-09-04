@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, type CoreMessage } from "ai";
+import { streamText, type ModelMessage } from "ai";
 import { requireUser } from "@/lib/auth/session";
 import { getActiveOrgId } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/prisma";
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: "asc" },
       take: 20,
     });
-    const messages: CoreMessage[] = history.map((m) => {
+    const messages: ModelMessage[] = history.map((m) => {
       const role = m.role.toLowerCase();
       if (role === "user") return { role: "user" as const, content: m.content };
       if (role === "system") return { role: "system" as const, content: m.content };
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       messages,
       system: agent.systemPrompt ?? undefined,
       temperature: agent.temperature,
-      maxTokens: agent.maxTokens,
+      maxOutputTokens: agent.maxTokens,
       onError: ({ error }) => {
         // This captures errors that happen DURING streaming (e.g. provider
         // returns an error mid-stream, rate limit, invalid API key, etc.)
@@ -140,8 +140,8 @@ export async function POST(req: NextRequest) {
       },
       onFinish: async ({ text: fullText, usage }) => {
         try {
-          const inputTokens = usage?.promptTokens ?? 0;
-          const outputTokens = usage?.completionTokens ?? 0;
+          const inputTokens = usage?.inputTokens ?? 0;
+          const outputTokens = usage?.outputTokens ?? 0;
 
           const costUsd =
             (inputTokens / 1000) * agentModelConfig.inputCostPer1K +
@@ -190,8 +190,18 @@ export async function POST(req: NextRequest) {
       metadata: { agentId: agent.id, conversationId: conversation.id },
     });
 
-    // 9. Return the stream — useChat() expects a data-stream response
-    return result.toDataStreamResponse();
+    // 9. Return the stream to the client.
+    //
+    // `ai` v7 dropped `toDataStreamResponse()` (the old `x-vercel-ai-data-stream`
+    // protocol) in favor of `toUIMessageStreamResponse()`, a new SSE-based wire
+    // format that only `@ai-sdk/react` v2+'s useChat() understands. This app is
+    // still on `@ai-sdk/react` ^1.0.0 (its useChat() predates that rewrite —
+    // see chat-interface.tsx, which uses the old input/handleSubmit/isLoading
+    // API), so `toTextStreamResponse()` — a plain incremental text/plain stream
+    // — is the response shape that actually matches `streamProtocol: "text"`
+    // on the client. Bumping to the new protocol would require migrating
+    // chat-interface.tsx to the v2 useChat() API too; out of scope here.
+    return result.toTextStreamResponse();
   } catch (err) {
     const error = toAppError(err);
     return NextResponse.json(error.toJSON(), { status: error.statusCode });

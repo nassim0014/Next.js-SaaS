@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
-import type { LanguageModelV1 } from "ai";
+import type { LanguageModel } from "ai";
 
 export type ProviderName = "google" | "openai" | "anthropic" | "groq";
 
@@ -34,7 +34,7 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
 };
 
 /**
- * Resolve a provider + model name to a LanguageModelV1 instance.
+ * Resolve a provider + model name to a LanguageModel instance.
  * Returns null if the provider has no API key configured.
  *
  * @param provider — one of "google" | "openai" | "anthropic" | "groq"
@@ -44,29 +44,29 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
 export function resolveModel(
   provider: ProviderName,
   modelName?: string
-): LanguageModelV1 | null {
+): LanguageModel | null {
   const key = process.env[PROVIDER_ENV_KEYS[provider]];
   if (!key) return null;
 
   switch (provider) {
     case "google": {
       const google = createGoogleGenerativeAI({ apiKey: key });
-      return google(modelName ?? DEFAULT_MODELS.google) as unknown as LanguageModelV1;
+      return google(modelName ?? DEFAULT_MODELS.google) as unknown as LanguageModel;
     }
     case "openai": {
       const openai = createOpenAI({ apiKey: key });
-      return openai(modelName ?? DEFAULT_MODELS.openai) as unknown as LanguageModelV1;
+      return openai(modelName ?? DEFAULT_MODELS.openai) as unknown as LanguageModel;
     }
     case "anthropic": {
       const anthropic = createAnthropic({ apiKey: key });
-      return anthropic(modelName ?? DEFAULT_MODELS.anthropic) as unknown as LanguageModelV1;
+      return anthropic(modelName ?? DEFAULT_MODELS.anthropic) as unknown as LanguageModel;
     }
     case "groq": {
       const groq = createOpenAI({
         apiKey: key,
         baseURL: "https://api.groq.com/openai/v1",
       });
-      return groq(modelName ?? DEFAULT_MODELS.groq) as unknown as LanguageModelV1;
+      return groq(modelName ?? DEFAULT_MODELS.groq) as unknown as LanguageModel;
     }
     default:
       return null;
