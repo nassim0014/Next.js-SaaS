@@ -406,6 +406,46 @@ model TokenUsage {
 }
 
 // =============================================================================
+// RATE LIMITING
+// -----------------------------------------------------------------------------
+// Fixed-window request counters, keyed by organization. TokenUsage above caps
+// *monthly spend*; this caps *request rate*, so a runaway client cannot burn a
+// month of budget in a minute before the monthly cap trips.
+//
+// One row per (organization, bucket, window). `windowStart` is the window's
+// floor timestamp, so the row identity is derived — no read is needed to find
+// it. Writes go through a single `INSERT ... ON CONFLICT DO UPDATE ... SET
+// request_count = request_count + 1 RETURNING request_count` (see
+// src/lib/rate-limit.ts), which is why the @@unique below is load-bearing
+// rather than merely a data-integrity nicety: it is the conflict target that
+// makes the increment atomic under concurrent requests.
+//
+// Soft reference on organizationId (no relation), per design principle 3 —
+// this is a high-volume table on the hot path.
+// =============================================================================
+
+model RateLimitWindow {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  // Which limit this row counts, e.g. "chat". Lets later cycles add buckets
+  // for the other unprotected routes without another table.
+  bucket         String
+  // Floor of the fixed window: epochMillis - (epochMillis % windowMs).
+  windowStart    DateTime @map("window_start")
+  requestCount   Int      @default(0) @map("request_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Conflict target for the atomic upsert. Must stay a single unique index
+  // over exactly these three columns.
+  @@unique([organizationId, bucket, windowStart])
+  @@index([organizationId])
+  // Supports pruning elapsed windows (no pruning job is wired up yet).
+  @@index([windowStart])
+  @@map("rate_limit_windows")
+}
+
+// =============================================================================
 // BILLING
 // =============================================================================
 

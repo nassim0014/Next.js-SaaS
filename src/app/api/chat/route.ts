@@ -5,6 +5,7 @@ import { getActiveOrgId } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/prisma";
 import { resolveModel } from "@/lib/ai/llm";
 import { checkBudget, recordTokenUsage } from "@/lib/ai/cost";
+import { enforceChatRateLimit } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit/logger";
 import { AppError, toAppError } from "@/lib/errors";
 import { z } from "zod";
@@ -37,6 +38,14 @@ export async function POST(req: NextRequest) {
     const session = await requireUser();
     const orgId = await getActiveOrgId();
     if (!orgId) throw new AppError("NO_ACTIVE_ORG");
+
+    // 0. Rate limit — throws AppError("RATE_LIMITED") → HTTP 429.
+    //
+    // Deliberately the first thing after the org is known, ahead of body
+    // parsing and every query below: checkBudget() (step 5) caps monthly
+    // spend, but without a rate cap a runaway client burns that whole budget
+    // in minutes. Cheapest possible rejection — one atomic counter write.
+    await enforceChatRateLimit(orgId);
 
     const body = await req.json();
     const input = chatRequestSchema.parse(body);
