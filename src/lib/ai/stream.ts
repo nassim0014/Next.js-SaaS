@@ -1,4 +1,4 @@
-import { streamText, type CoreMessage } from "ai";
+import { streamText, type ModelMessage } from "ai";
 import { prisma } from "@/lib/prisma";
 import { resolveModel, type ProviderName } from "./llm";
 import { recordTokenUsage, checkBudget } from "./cost";
@@ -9,7 +9,7 @@ export type StreamChatOptions = {
   conversationId: string;
   provider: ProviderName;
   modelName: string;
-  messages: CoreMessage[];
+  messages: ModelMessage[];
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
@@ -40,11 +40,13 @@ export async function streamChat(options: StreamChatOptions) {
     messages: options.messages,
     system: options.systemPrompt,
     temperature: options.temperature ?? 0.7,
-    maxTokens: options.maxTokens ?? 4096,
+    maxOutputTokens: options.maxTokens ?? 4096,
   });
 
   // 3. Meter usage on completion (fire-and-forget — don't block the stream)
-  result.usage
+  // `result.usage` is a `PromiseLike`, not a real `Promise` (no `.catch`),
+  // so route it through `Promise.resolve` first to get one back.
+  Promise.resolve(result.usage)
     .then(async (usage) => {
       if (!usage) return;
 
@@ -53,15 +55,9 @@ export async function streamChat(options: StreamChatOptions) {
       });
       if (!modelConfig) return;
 
-      const inputTokens =
-        "promptTokens" in usage
-          ? usage.promptTokens
-          : (usage as { inputTokens?: number }).inputTokens ?? 0;
-      const outputTokens =
-        "completionTokens" in usage
-          ? usage.completionTokens
-          : (usage as { outputTokens?: number }).outputTokens ?? 0;
-      const cachedTokens = (usage as { cachedTokens?: number }).cachedTokens ?? 0;
+      const inputTokens = usage.inputTokens ?? 0;
+      const outputTokens = usage.outputTokens ?? 0;
+      const cachedTokens = usage.inputTokenDetails.cacheReadTokens ?? 0;
 
       const costUsd =
         (inputTokens / 1000) * modelConfig.inputCostPer1K +
