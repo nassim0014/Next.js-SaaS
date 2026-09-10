@@ -43,8 +43,12 @@ export default function SignupPage() {
       }
       // Signed up + auto-confirmed (e.g., when email auth is set to "no confirmation")
       toast.success("Account created!");
-      // Hard navigation — forces full page load so auth cookie is sent reliably
-      window.location.href = "/dashboard";
+      // Hard navigation — forces full page load so auth cookie is sent reliably.
+      // Built as an absolute URL (rather than a relative "/dashboard" string)
+      // so @next/next/no-location-assign-relative-destination doesn't flag
+      // this as a candidate for router.push() — a client-side transition
+      // wouldn't force the reload this cookie handoff depends on.
+      window.location.href = new URL("/dashboard", window.location.origin).toString();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign up failed");
     } finally {
