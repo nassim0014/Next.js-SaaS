@@ -78,8 +78,29 @@ export function formatContextForPrompt(chunks: RetrievedChunk[]): string {
  * Chunk a long document into ~500-token pieces for embedding.
  * Simple character-based chunking with overlap. For production, consider
  * recursive text splitters or layout-aware chunking (e.g., unstructured.io).
+ *
+ * The cursor advances by `chunkSize - overlap` each iteration. If `overlap`
+ * is not strictly smaller than `chunkSize` — e.g. a caller passing
+ * `overlap >= chunkSize`, or swapping the two positional args — that step is
+ * `<= 0` and `while (i < text.length)` never terminates: `chunks` grows
+ * without bound until the process is killed. The defaults are safe, but this
+ * is a public function feeding the ingestion pipeline, so it validates its
+ * own inputs rather than trusting every caller to get the arithmetic right.
  */
 export function chunkDocument(text: string, chunkSize = 2000, overlap = 200): string[] {
+  if (chunkSize <= 0) {
+    throw new RangeError(`chunkDocument: chunkSize must be > 0, got ${chunkSize}`);
+  }
+  if (overlap < 0) {
+    throw new RangeError(`chunkDocument: overlap must be >= 0, got ${overlap}`);
+  }
+  if (overlap >= chunkSize) {
+    throw new RangeError(
+      `chunkDocument: overlap (${overlap}) must be smaller than chunkSize (${chunkSize}) — ` +
+        `otherwise the cursor never advances and this loops forever`
+    );
+  }
+
   const chunks: string[] = [];
   let i = 0;
   while (i < text.length) {

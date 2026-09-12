@@ -10,8 +10,12 @@ webhook-retry cron), then the three coverage items filed by the backlog-refresh 
 (rate limiting) was done this cycle but **only for `/api/chat`**; the other three unprotected
 routes it names are still open — see the item for the carried-forward scope note.
 
-**Heads-up for the next cycle (2026-09-04):** `main` is currently red for reasons unrelated to
-any backlog item. The Dependabot bump of `ai` 4.3.19 → 7.0.84 (PR #77) is a major-version SDK
+**Heads-up for the next cycle (2026-09-04):** ~~`main` is currently red for reasons unrelated to
+any backlog item.~~ **Resolved by PR #80** (`fix: migrate ai SDK v4→v7 call sites, fix lint, fix
+Google provider runtime crash`) — confirmed on the current `main`: `pnpm typecheck`, `pnpm lint`,
+`pnpm test`, and `pnpm build` are all clean. Leaving the original note below for history.
+
+The Dependabot bump of `ai` 4.3.19 → 7.0.84 (PR #77) is a major-version SDK
 break that was merged without migrating the call sites — `pnpm typecheck` fails with 18 errors
 across `src/app/api/chat/route.ts`, `src/lib/ai/stream.ts`, `src/lib/ai/llm.ts` and
 `src/lib/ai/embeddings.ts` (`CoreMessage`, `LanguageModelV1`, `maxTokens`,
@@ -229,24 +233,36 @@ only correct if `deliver()` records `attempts` and `status` the way
 2xx path, non-2xx path, thrown/timeout path, and the "no subscribed
 endpoints → no-op" early return.
 
-## 8. `src/lib/ai/rag.ts` has zero coverage — `chunkDocument` can infinite-loop   `source: coverage`
+## 8. ~~`src/lib/ai/rag.ts` has zero coverage — `chunkDocument` can infinite-loop~~ ✅   `source: coverage`
 
-`rag.ts` (RAG retrieval + context formatting + document chunking) has no
-test file. Beyond the missing coverage there is a concrete defect:
+`rag.ts` (RAG retrieval + context formatting + document chunking) had no
+test file. Beyond the missing coverage there was a concrete defect:
 
 `chunkDocument(text, chunkSize = 2000, overlap = 200)` advances the
-cursor with `i += chunkSize - overlap` and has no guard that
+cursor with `i += chunkSize - overlap` and had no guard that
 `overlap < chunkSize` (`rag.ts:82-90`). Any caller passing
-`overlap >= chunkSize` — or swapping the two positional args — makes the
-step `<= 0`, so the `while (i < text.length)` loop never terminates and
-`chunks` grows without bound until the process is killed. The defaults
-are safe, so this is dormant today, but it is an un-validated public
-function that feeds the ingestion pipeline.
+`overlap >= chunkSize` — or swapping the two positional args — made the
+step `<= 0`, so the `while (i < text.length)` loop never terminated and
+`chunks` grew without bound until the process was killed. The defaults
+were safe, so this was dormant (confirmed: `chunkDocument` has no call
+sites anywhere in `src/` yet, only the RAG pipeline this feeds isn't
+wired up), but it was an un-validated public function feeding the future
+ingestion pipeline.
 
-Fix: clamp/validate (`if (overlap >= chunkSize) throw` or
-`Math.max(1, chunkSize - overlap)`), then add tests — the chunking guard,
-short-text-single-chunk, overlap correctness, and `formatContextForPrompt`
-with zero and N chunks (pure functions, no DB).
+**Fixed:** validates now — throws `RangeError` for `chunkSize <= 0`,
+`overlap < 0`, or `overlap >= chunkSize`, rather than looping forever.
+Chose "throw" over "clamp" (the doc's other suggested option) because a
+caller passing nonsensical args to a chunking function has a bug worth
+surfacing, not silently working around. Confirmed the infinite loop was
+real before fixing it (isolated repro, killed at 1000+ iterations with
+`i` stuck at 0), not just a theoretical read of the arithmetic.
+
+Added `src/lib/ai/rag.test.ts` (12 tests, pure functions, no DB): the four
+new guard-throws (including the exact swapped-positional-args case named
+above), short-text-single-chunk, empty-text, whole-document
+reconstruction from overlapping chunks, actual overlap-content
+correctness, zero-overlap, and `formatContextForPrompt` with zero and N
+chunks.
 
 Loop-Agent: backlog-refresh / claude / laptop
 
