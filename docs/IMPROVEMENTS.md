@@ -4,11 +4,13 @@ Created by the closed-improvement-loop's first visit to this repo (2026-08-19). 
 impact; each item is scoped to be one reviewable PR. Pick the top unblocked item on future
 cycles rather than the easiest one.
 
-**Status (2026-09-04):** items 1–7 are done. Open, in priority order: **8** (parallelise the
-webhook-retry cron), then the three coverage items filed by the backlog-refresh loop on
-2026-08-29 (re-numbered 6–8 further down — note the duplicate numbering in this file). Item 7
-(rate limiting) was done this cycle but **only for `/api/chat`**; the other three unprotected
-routes it names are still open — see the item for the carried-forward scope note.
+**Status (2026-09-18):** items 1–8 (first numbering, including the webhook-retry cron
+parallelization) are done. Open, in priority order: the two remaining coverage items filed by
+the backlog-refresh loop on 2026-08-29 (`metering.ts`, `dispatcher.ts` — re-numbered 6–7
+further down; item 8 of that batch, `rag.ts`, is also done — note the duplicate numbering in
+this file). Item 7 (rate limiting, first numbering) was done 2026-09-04 but **only for
+`/api/chat`**; the other three unprotected routes it names are still open — see the item for
+the carried-forward scope note.
 
 **Heads-up for the next cycle (2026-09-04):** ~~`main` is currently red for reasons unrelated to
 any backlog item.~~ **Resolved by PR #80** (`fix: migrate ai SDK v4→v7 call sites, fix lint, fix
@@ -114,15 +116,19 @@ have generated a whole-schema baseline rather than a one-table migration, so onl
 model was added. `pnpm db:push` (or a hand-written migration, if the owner would rather start a
 Prisma migration history) is needed against a real database before this deploys.
 
-## 8. `webhook-retry` cron delivers sequentially with a 10s timeout per event
+## 8. ~~`webhook-retry` cron delivers sequentially with a 10s timeout per event~~ ✅
 
 **File:** [`src/app/api/cron/webhook-retry/route.ts`](../src/app/api/cron/webhook-retry/route.ts)
 
-`getEventsForRetry()` returns up to 50 events; the cron `await fetch`es them one at a time,
-each with `AbortSignal.timeout(10_000)`. 50 slow/dead endpoints ⇒ up to 500s wall time, past
-typical serverless function limits — the batch gets killed mid-loop and the tail never
-processes. `dispatcher.ts` already fans out with `Promise.allSettled`; the cron should too
-(bounded concurrency, e.g. 10).
+**Done (2026-09-18).** Added a local `mapWithConcurrency` helper (no new dependency) and run
+retries with at most 10 in flight at once — mirrors `dispatcher.ts`'s `Promise.allSettled`
+fan-out but bounded rather than fully unbounded, since this cron loop can span many distinct
+orgs/endpoints in one run. The `retried`/`succeeded` counters and all per-event side effects
+(status update, `scheduleRetry`) are unchanged.
+
+Added a test that tracks max-in-flight `fetch` calls and confirmed it **fails** against the
+pre-fix sequential code (stuck at 1) before passing after the fix — the regression this item
+describes is now pinned, not just fixed.
 
 ## 2. ~~GDPR erasure (`deleteUserData`) is eight sequential writes with no transaction~~ ✅
 
