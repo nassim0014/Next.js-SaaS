@@ -4,9 +4,28 @@ Created by the closed-improvement-loop's first visit to this repo (2026-08-19). 
 impact; each item is scoped to be one reviewable PR. Pick the top unblocked item on future
 cycles rather than the easiest one.
 
-**Status (2026-08-27):** items 1–5 are done. Open, in priority order: **7** (rate limiting —
-top pick next cycle), then **8** (parallelise the webhook-retry cron). Item 6 was found and
-fixed this cycle.
+**Status (2026-09-18):** items 1–8 (first numbering, including the webhook-retry cron
+parallelization) are done. Open, in priority order: the two remaining coverage items filed by
+the backlog-refresh loop on 2026-08-29 (`metering.ts`, `dispatcher.ts` — re-numbered 6–7
+further down; item 8 of that batch, `rag.ts`, is also done — note the duplicate numbering in
+this file). Item 7 (rate limiting, first numbering) was done 2026-09-04 but **only for
+`/api/chat`**; the other three unprotected routes it names are still open — see the item for
+the carried-forward scope note.
+
+**Heads-up for the next cycle (2026-09-04):** ~~`main` is currently red for reasons unrelated to
+any backlog item.~~ **Resolved by PR #80** (`fix: migrate ai SDK v4→v7 call sites, fix lint, fix
+Google provider runtime crash`) — confirmed on the current `main`: `pnpm typecheck`, `pnpm lint`,
+`pnpm test`, and `pnpm build` are all clean. Leaving the original note below for history.
+
+The Dependabot bump of `ai` 4.3.19 → 7.0.84 (PR #77) is a major-version SDK
+break that was merged without migrating the call sites — `pnpm typecheck` fails with 18 errors
+across `src/app/api/chat/route.ts`, `src/lib/ai/stream.ts`, `src/lib/ai/llm.ts` and
+`src/lib/ai/embeddings.ts` (`CoreMessage`, `LanguageModelV1`, `maxTokens`,
+`usage.promptTokens` / `completionTokens`, `toDataStreamResponse` all moved or were renamed in
+v5+). Separately, `eslint-config-next` 16.3.3 (PR #76) added a rule that makes
+`src/app/signup/page.tsx:47` warn, and `pnpm lint` runs `--max-warnings=0`. Both predate this
+cycle's work; neither is in scope for a rate-limiting PR. The `ai` v4→v7 migration is a real
+piece of work and needs the owner's call on target API shape.
 
 ## 1. ~~`/api/org/switch` sets the active-org cookie without verifying membership~~ ✅
 
@@ -39,30 +58,77 @@ subsequent one via the cron was not.
 mirroring `deliver()`. Added `src/app/api/cron/webhook-retry/route.test.ts` (5 tests) — the two
 failure-path tests fail against the pre-fix handler (verified by `git stash`).
 
-## 7. No rate limiting anywhere in the app
+## 7. ~~No rate limiting anywhere in the app~~ ✅ (`/api/chat` only — see scope note)
 
-`src/lib/errors.ts` defines `RATE_LIMITED` / HTTP 429, but nothing in the codebase ever throws
-it (`grep -rin "rate.?limit" src/` finds only the enum). Unprotected:
+**Done this cycle (2026-09-04)**, scoped to `/api/chat` exactly as the original item
+recommended. `RATE_LIMITED` / HTTP 429 was a defined-but-never-thrown enum member; it is now
+thrown for real.
 
-- **`/api/chat`** — every request costs real LLM tokens. `checkBudget(orgId)` caps *monthly*
-  spend but nothing caps request *rate*, so a single client can burn a month's budget in
-  minutes and rack up provider bills before the cap trips.
-- **`/api/org/switch`**, **auth callbacks**, **API-key creation** — no throttle on abuse /
-  enumeration.
+**What shipped:**
 
-**Suggested:** a small fixed-window limiter keyed by user id (or IP for unauthenticated
-routes), backed by the existing Postgres or a lightweight KV. Scope the first PR to `/api/chat`
-only — highest cost, clearest key (org id) — and leave the rest ranked.
+- **`RateLimitWindow` model** (`rate_limit_windows`) in `prisma/schema.prisma` — one row per
+  (org, bucket, window), soft reference on `organizationId` per design principle 3. The
+  `@@unique([organizationId, bucket, windowStart])` index is load-bearing: it is the
+  `ON CONFLICT` target.
+- **`src/lib/rate-limit.ts`** — fixed-window limiter keyed by **organization id** (the billing
+  entity, and the thing whose budget is at risk). Default **20 requests / 60s / org**, as the
+  named constant `CHAT_REQUESTS_PER_WINDOW`. The limit is **inclusive**: the 20th request in a
+  window passes, the 21st throws `AppError("RATE_LIMITED", …)`.
+- **Atomic increment.** The counter is bumped in a *single* statement —
+  `INSERT … ON CONFLICT (organization_id, bucket, window_start) DO UPDATE SET request_count =
+  rate_limit_windows.request_count + 1 RETURNING request_count`. A read-then-write limiter
+  would let N concurrent requests all read the same value and all conclude they were under the
+  limit, i.e. it would fail at the exact burst this item exists to stop. Prisma's `upsert()`
+  was not used: it cannot express a read-free `count + 1` update and does not guarantee a
+  single ON CONFLICT statement for a compound unique target.
+- **Wired into `src/app/api/chat/route.ts`** as step 0, before body parsing and before
+  `checkBudget()` — the monthly cap is worthless if a client can exhaust it in a minute.
+- **`src/lib/rate-limit.test.ts`** — 20 tests (mocked Prisma): window flooring/rollover,
+  under-limit, at-the-boundary, over-limit → 429, window reset, fail-closed on DB error. 14 of
+  the 20 fail against a deliberately-written read-then-write variant, including the
+  "exactly ONE database statement per request" guard — verified by temporarily swapping the
+  racy implementation in, not by inspection.
 
-## 8. `webhook-retry` cron delivers sequentially with a 10s timeout per event
+**Deliberately NOT covered — still open, still ranked.** The original item named four
+unprotected surfaces; only the first is now protected:
+
+- **`/api/org/switch`** — no throttle on org enumeration.
+- **Auth callbacks** — no throttle on credential-stuffing / abuse.
+- **API-key creation** — no throttle.
+
+These need an IP-or-user key rather than an org key (the caller may have no active org yet),
+which is a genuinely different keying decision, so they were left for a future cycle rather
+than guessed at. `enforceRateLimit()` already takes an arbitrary `bucket`, so adding them is a
+call site plus a constant — no schema change.
+
+**Also not done:** (a) no pruning job for elapsed `rate_limit_windows` rows — one row per org
+per minute accumulates; the `@@index([windowStart])` is in place so a cleanup cron is cheap to
+add, but nothing wires one up yet. (b) No RLS policy for the new table, unlike every other
+tenant-scoped table in `supabase/migrations/0002_rls_policies.sql`. The limiter only ever runs
+through the server-side Prisma client, which bypasses RLS, and the rows hold nothing but an org
+id and a count — but this is an intentional inconsistency the owner should sign off on rather
+than an oversight.
+
+**Migration caveat:** this repo has no `prisma/migrations/` directory — `scripts/setup.sh` and
+`docs/CONTRIBUTING.md` both apply the schema with `pnpm db:push`, and the hand-written SQL in
+`supabase/migrations/` covers extensions/RLS only. Running `pnpm db:migrate` would therefore
+have generated a whole-schema baseline rather than a one-table migration, so only the schema
+model was added. `pnpm db:push` (or a hand-written migration, if the owner would rather start a
+Prisma migration history) is needed against a real database before this deploys.
+
+## 8. ~~`webhook-retry` cron delivers sequentially with a 10s timeout per event~~ ✅
 
 **File:** [`src/app/api/cron/webhook-retry/route.ts`](../src/app/api/cron/webhook-retry/route.ts)
 
-`getEventsForRetry()` returns up to 50 events; the cron `await fetch`es them one at a time,
-each with `AbortSignal.timeout(10_000)`. 50 slow/dead endpoints ⇒ up to 500s wall time, past
-typical serverless function limits — the batch gets killed mid-loop and the tail never
-processes. `dispatcher.ts` already fans out with `Promise.allSettled`; the cron should too
-(bounded concurrency, e.g. 10).
+**Done (2026-09-18).** Added a local `mapWithConcurrency` helper (no new dependency) and run
+retries with at most 10 in flight at once — mirrors `dispatcher.ts`'s `Promise.allSettled`
+fan-out but bounded rather than fully unbounded, since this cron loop can span many distinct
+orgs/endpoints in one run. The `retried`/`succeeded` counters and all per-event side effects
+(status update, `scheduleRetry`) are unchanged.
+
+Added a test that tracks max-in-flight `fetch` calls and confirmed it **fails** against the
+pre-fix sequential code (stuck at 1) before passing after the fix — the regression this item
+describes is now pinned, not just fixed.
 
 ## 2. ~~GDPR erasure (`deleteUserData`) is eight sequential writes with no transaction~~ ✅
 
@@ -173,24 +239,64 @@ only correct if `deliver()` records `attempts` and `status` the way
 2xx path, non-2xx path, thrown/timeout path, and the "no subscribed
 endpoints → no-op" early return.
 
-## 8. `src/lib/ai/rag.ts` has zero coverage — `chunkDocument` can infinite-loop   `source: coverage`
+## 8. ~~`src/lib/ai/rag.ts` has zero coverage — `chunkDocument` can infinite-loop~~ ✅   `source: coverage`
 
-`rag.ts` (RAG retrieval + context formatting + document chunking) has no
-test file. Beyond the missing coverage there is a concrete defect:
+`rag.ts` (RAG retrieval + context formatting + document chunking) had no
+test file. Beyond the missing coverage there was a concrete defect:
 
 `chunkDocument(text, chunkSize = 2000, overlap = 200)` advances the
-cursor with `i += chunkSize - overlap` and has no guard that
+cursor with `i += chunkSize - overlap` and had no guard that
 `overlap < chunkSize` (`rag.ts:82-90`). Any caller passing
-`overlap >= chunkSize` — or swapping the two positional args — makes the
-step `<= 0`, so the `while (i < text.length)` loop never terminates and
-`chunks` grows without bound until the process is killed. The defaults
-are safe, so this is dormant today, but it is an un-validated public
-function that feeds the ingestion pipeline.
+`overlap >= chunkSize` — or swapping the two positional args — made the
+step `<= 0`, so the `while (i < text.length)` loop never terminated and
+`chunks` grew without bound until the process was killed. The defaults
+were safe, so this was dormant (confirmed: `chunkDocument` has no call
+sites anywhere in `src/` yet, only the RAG pipeline this feeds isn't
+wired up), but it was an un-validated public function feeding the future
+ingestion pipeline.
 
-Fix: clamp/validate (`if (overlap >= chunkSize) throw` or
-`Math.max(1, chunkSize - overlap)`), then add tests — the chunking guard,
-short-text-single-chunk, overlap correctness, and `formatContextForPrompt`
-with zero and N chunks (pure functions, no DB).
+**Fixed:** validates now — throws `RangeError` for `chunkSize <= 0`,
+`overlap < 0`, or `overlap >= chunkSize`, rather than looping forever.
+Chose "throw" over "clamp" (the doc's other suggested option) because a
+caller passing nonsensical args to a chunking function has a bug worth
+surfacing, not silently working around. Confirmed the infinite loop was
+real before fixing it (isolated repro, killed at 1000+ iterations with
+`i` stuck at 0), not just a theoretical read of the arithmetic.
+
+Added `src/lib/ai/rag.test.ts` (12 tests, pure functions, no DB): the four
+new guard-throws (including the exact swapped-positional-args case named
+above), short-text-single-chunk, empty-text, whole-document
+reconstruction from overlapping chunks, actual overlap-content
+correctness, zero-overlap, and `formatContextForPrompt` with zero and N
+chunks.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 9. `getOrgMembership()` has zero test coverage — it's the org-authorization primitive behind an already-fixed IDOR   `source: coverage`
+
+`src/lib/auth/org-context.ts` (lines 36-48) has no test file at all (only `permissions.test.ts` exists in `src/lib/auth/`). It is the single membership lookup behind both `requireUserWithPermission()` (`src/lib/auth/session.ts:81-82`, used app-wide) and `/api/org/switch` (`src/app/api/org/switch/route.ts:24,45`), and its `if (!membership || membership.status !== "ACTIVE") return null` line is what makes a suspended or removed member correctly fail authorization. This is an auth-decision path whose caller already shipped an IDOR (closed item 1, "sets the active-org cookie without verifying membership") — a dropped `ACTIVE` filter here would reopen that exact bug class with no failing test to catch it.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 10. `exportUserData()` (GDPR data export) has zero test coverage   `source: coverage`
+
+`src/lib/gdpr/export.ts` (lines 13-119): eight parallel Prisma reads, a ZIP build, a Supabase Storage upload, a 7-day signed URL, a `DataRequest` row and an audit-log write, with neither error branch (`uploadError`, `urlError`) nor the `hashedKey: "[REDACTED]"` redaction on line 33 exercised. Item 3 (closed) deferred these tests as "needs a Supabase Storage mock which is more involved" and nothing was added since, with no open item tracking it. Every read here is keyed by `userId` (no cross-user exposure), and both error branches `throw` rather than swallow, so a bug's cost is a failed download, not wrong data going to the wrong person — plain coverage gap, not a risky-path one. A `vi.mock` of `@/lib/supabase/admin` returning stubbed `upload`/`createSignedUrl` results would cover the happy path, both error branches, and the redaction assertion.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 11. `scheduleRetry()`/`getEventsForRetry()` (webhook retry backoff) have zero direct test coverage   `source: coverage`
+
+`src/lib/webhooks/retry.ts` (lines 27-81): `src/app/api/cron/webhook-retry/route.test.ts` replaces `scheduleRetry` with `vi.mock`, so the `RETRY_INTERVALS_MS` backoff ladder, the ±20% jitter, and the `attempts >= MAX_ATTEMPTS` permanent-failure branch never actually execute. The mechanism's *absence* was already the bug in closed item 6 (the cron never called `scheduleRetry`); the logic inside it has still never been verified independently. It's pure arithmetic over a single `prisma.webhookEvent` read/update (retry bookkeeping, not business data — a bad backoff produces wrong timing or an early give-up, both recoverable and already logged), so a mocked-Prisma test covering attempts 0, mid-ladder, and at-max is cheap.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 12. CSP still uses `'unsafe-inline'` + `'unsafe-eval'`, with a self-documented TODO   `source: docs`
+
+`next.config.ts:50-53` — the Content-Security-Policy header sets `script-src 'self' 'unsafe-inline' 'unsafe-eval'` with an explicit `// TODO: for production, replace 'unsafe-inline' with nonce-based CSP via next.config.ts experimental: { nonce: true } + middleware.` This is the only TODO/FIXME/XXX/HACK marker in the entire `.ts`/`.tsx` tree. Not filed anywhere in the backlog. Flagging as owner-judgment-needed since tightening CSP could affect any inline scripts downstream builders add to this boilerplate — not a drop-in fix.
+
+## 13. No coverage tooling installed — `vitest run --coverage` fails outright   `source: coverage`
+
+`npx vitest run --coverage` errors with `MISSING DEPENDENCY  Cannot find dependency '@vitest/coverage-v8'`; `package.json` has no `test:coverage` script and neither `@vitest/coverage-v8` nor `@vitest/coverage-istanbul` is a devDependency. Every coverage item in this backlog (including items 6/7 and 9-11 above) had to be found by manually diffing `src/**/*.ts` against `src/**/*.test.ts` rather than real line/branch percentages. Lowest priority of this batch — a tooling gap, not a code risk.
 
 Loop-Agent: backlog-refresh / claude / laptop
 
