@@ -266,6 +266,34 @@ chunks.
 
 Loop-Agent: backlog-refresh / claude / laptop
 
+## 9. `getOrgMembership()` has zero test coverage — it's the org-authorization primitive behind an already-fixed IDOR   `source: coverage`
+
+`src/lib/auth/org-context.ts` (lines 36-48) has no test file at all (only `permissions.test.ts` exists in `src/lib/auth/`). It is the single membership lookup behind both `requireUserWithPermission()` (`src/lib/auth/session.ts:81-82`, used app-wide) and `/api/org/switch` (`src/app/api/org/switch/route.ts:24,45`), and its `if (!membership || membership.status !== "ACTIVE") return null` line is what makes a suspended or removed member correctly fail authorization. This is an auth-decision path whose caller already shipped an IDOR (closed item 1, "sets the active-org cookie without verifying membership") — a dropped `ACTIVE` filter here would reopen that exact bug class with no failing test to catch it.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 10. `exportUserData()` (GDPR data export) has zero test coverage   `source: coverage`
+
+`src/lib/gdpr/export.ts` (lines 13-119): eight parallel Prisma reads, a ZIP build, a Supabase Storage upload, a 7-day signed URL, a `DataRequest` row and an audit-log write, with neither error branch (`uploadError`, `urlError`) nor the `hashedKey: "[REDACTED]"` redaction on line 33 exercised. Item 3 (closed) deferred these tests as "needs a Supabase Storage mock which is more involved" and nothing was added since, with no open item tracking it. Every read here is keyed by `userId` (no cross-user exposure), and both error branches `throw` rather than swallow, so a bug's cost is a failed download, not wrong data going to the wrong person — plain coverage gap, not a risky-path one. A `vi.mock` of `@/lib/supabase/admin` returning stubbed `upload`/`createSignedUrl` results would cover the happy path, both error branches, and the redaction assertion.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 11. `scheduleRetry()`/`getEventsForRetry()` (webhook retry backoff) have zero direct test coverage   `source: coverage`
+
+`src/lib/webhooks/retry.ts` (lines 27-81): `src/app/api/cron/webhook-retry/route.test.ts` replaces `scheduleRetry` with `vi.mock`, so the `RETRY_INTERVALS_MS` backoff ladder, the ±20% jitter, and the `attempts >= MAX_ATTEMPTS` permanent-failure branch never actually execute. The mechanism's *absence* was already the bug in closed item 6 (the cron never called `scheduleRetry`); the logic inside it has still never been verified independently. It's pure arithmetic over a single `prisma.webhookEvent` read/update (retry bookkeeping, not business data — a bad backoff produces wrong timing or an early give-up, both recoverable and already logged), so a mocked-Prisma test covering attempts 0, mid-ladder, and at-max is cheap.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
+## 12. CSP still uses `'unsafe-inline'` + `'unsafe-eval'`, with a self-documented TODO   `source: docs`
+
+`next.config.ts:50-53` — the Content-Security-Policy header sets `script-src 'self' 'unsafe-inline' 'unsafe-eval'` with an explicit `// TODO: for production, replace 'unsafe-inline' with nonce-based CSP via next.config.ts experimental: { nonce: true } + middleware.` This is the only TODO/FIXME/XXX/HACK marker in the entire `.ts`/`.tsx` tree. Not filed anywhere in the backlog. Flagging as owner-judgment-needed since tightening CSP could affect any inline scripts downstream builders add to this boilerplate — not a drop-in fix.
+
+## 13. No coverage tooling installed — `vitest run --coverage` fails outright   `source: coverage`
+
+`npx vitest run --coverage` errors with `MISSING DEPENDENCY  Cannot find dependency '@vitest/coverage-v8'`; `package.json` has no `test:coverage` script and neither `@vitest/coverage-v8` nor `@vitest/coverage-istanbul` is a devDependency. Every coverage item in this backlog (including items 6/7 and 9-11 above) had to be found by manually diffing `src/**/*.ts` against `src/**/*.test.ts` rather than real line/branch percentages. Lowest priority of this batch — a tooling gap, not a code risk.
+
+Loop-Agent: backlog-refresh / claude / laptop
+
 ---
 
 **Notes for future cycles:** nothing here needed the owner's judgement to identify, but item 2
