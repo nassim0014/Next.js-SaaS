@@ -117,4 +117,69 @@ describe("cron/webhook-retry", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(scheduleRetryMock).not.toHaveBeenCalled();
   });
+
+  it("delivers with bounded concurrency instead of one event at a time", async () => {
+    // Regression guard for the "50 events x 10s timeout = up to 500s wall
+    // time" problem: a sequential loop can only ever have 1 fetch in flight,
+    // so this test fails against the pre-fix implementation (maxInFlight
+    // would be 1). It also asserts the concurrency is *bounded* — fully
+    // unbounded fan-out is its own risk when many events can share an
+    // endpoint/org.
+    const N = 25;
+    getEventsForRetryMock.mockResolvedValue(
+      Array.from({ length: N }, (_, i) => ({
+        id: `evt-${i}`,
+        endpointId: "ep-1",
+        eventType: "conversation.created",
+        payload: {},
+      }))
+    );
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight--;
+      return { ok: true, status: 200 };
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    await GET(cronRequest());
+
+    expect(fetchMock).toHaveBeenCalledTimes(N);
+    expect(maxInFlight).toBeGreaterThan(1);
+    expect(maxInFlight).toBeLessThanOrEqual(10);
+  });
+
+  it("keeps the retried/succeeded counters correct under concurrent processing", async () => {
+    const events = [
+      { id: "evt-ok", endpointId: "ep-1", eventType: "x", payload: {} },
+      { id: "evt-fail", endpointId: "ep-1", eventType: "x", payload: {} },
+      { id: "evt-throw", endpointId: "ep-1", eventType: "x", payload: {} },
+    ];
+    getEventsForRetryMock.mockResolvedValue(events);
+
+    const fetchMock = vi.fn().mockImplementation((url, opts) => {
+      const body = JSON.parse((opts as { body: string }).body) as { payload: unknown };
+      void body;
+      return Promise.resolve({ ok: true, status: 200 });
+    });
+    // Route the three events to three different outcomes via call order.
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockRejectedValueOnce(new Error("ETIMEDOUT"));
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const res = await GET(cronRequest());
+    const body = (await res.json()) as { retried: number; succeeded: number };
+
+    // 1 response ok + 1 response non-ok both count toward "retried" (a
+    // response was obtained); the thrown/timed-out one does not — matching
+    // the pre-existing counter semantics this refactor must not change.
+    expect(body.retried).toBe(2);
+    expect(body.succeeded).toBe(1);
+  });
 });

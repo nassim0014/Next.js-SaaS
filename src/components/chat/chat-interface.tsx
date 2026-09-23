@@ -93,7 +93,9 @@ export function ChatInterface({
       agentId: selectedAgentId,
       conversationId: selectedConversationId,
     }),
-    streamProtocol: "data",
+    // Server now returns a plain text stream (`toTextStreamResponse()`) —
+    // see the comment in src/app/api/chat/route.ts for why.
+    streamProtocol: "text",
     onError: (err) => {
       console.error("[useChat error]", err);
       // The error message from the data stream can be generic ("An error occurred.")

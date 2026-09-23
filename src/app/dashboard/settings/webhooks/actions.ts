@@ -14,7 +14,7 @@ const createWebhookSchema = z.object({
   events: z.string().min(1, "At least one event is required"),
 });
 
-export async function createWebhookAction(prevState: { error?: string }, formData: FormData): Promise<{ error?: string }> {
+export async function createWebhookAction(prevState: { error?: string; secret?: string }, formData: FormData): Promise<{ error?: string; secret?: string }> {
   try {
     const session = await requireUser();
     const orgId = await requireActiveOrgId();
@@ -54,7 +54,7 @@ export async function createWebhookAction(prevState: { error?: string }, formDat
     });
 
     revalidatePath("/dashboard/settings/webhooks");
-    return {};
+    return { secret };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Failed to create webhook" };
   }
