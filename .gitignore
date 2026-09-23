@@ -30,6 +30,9 @@ pnpm-debug.log*
 .env.*.local
 !.env.example
 
+# base-commit regression test scratch files (see actions.test.ts base-commit pin)
+*.base-pin.generated.ts
+
 # vercel
 .vercel
 
