@@ -96,11 +96,18 @@ describe("createWebhookAction", () => {
 });
 
 // Base-commit pin: proves this is a real behavioral regression, not just a
-// new assertion that happens to pass either way. Resolves against `main` or
-// `origin/main` (via execFile, never a shell string) and skips cleanly (not
-// error) if neither ref is reachable, so it degrades gracefully on a shallow
-// CI checkout instead of failing red for an infrastructure reason unrelated
-// to the code under test.
+// new assertion that happens to pass either way. Resolves against the fixed
+// commit immediately before this fix (PIN_COMMIT below), NOT the `main`
+// branch name — `main` moves, and once this fix merged, a CI run triggered
+// by that very push checks out a local `main` ref that IS the new HEAD, so
+// resolving "main" at test time compared the fixed code against itself and
+// failed on every subsequent push to main (observed in CI from 2026-09-07
+// onward). A fixed SHA can't drift out from under itself that way. It's
+// read via `execFile` (never a shell string) and skips cleanly (not error)
+// if that commit isn't reachable, so it degrades gracefully on a shallow CI
+// checkout instead of failing red for an infrastructure reason unrelated to
+// the code under test — most CI runs take this path, since the default
+// `actions/checkout` depth here is 1.
 //
 // The extracted base-commit source is written verbatim (no re-typing, no
 // manual transpile) to a throwaway `.ts` file alongside this test and loaded
@@ -109,8 +116,10 @@ describe("createWebhookAction", () => {
 // imports to the SAME `vi.mock` doubles registered above (mocks apply by
 // resolved module id, not by importing file), so this genuinely executes the
 // old implementation against the old code, not a narration of it.
+const PIN_COMMIT = "e32585b1e975fce9a34d673e90af0c8003d31e17"; // parent of the #91 fix commit
+
 describe("createWebhookAction — base-commit regression pin", () => {
-  it("main's createWebhookAction returns no secret on success (the bug this change fixes)", async () => {
+  it(`commit ${PIN_COMMIT.slice(0, 7)}'s createWebhookAction returns no secret on success (the bug this change fixes)`, async () => {
     const { execFileSync } = await import("node:child_process");
     const path = await import("node:path");
     const fs = await import("node:fs");
@@ -118,18 +127,15 @@ describe("createWebhookAction — base-commit regression pin", () => {
     const thisDir = path.dirname(fileURLToPath(import.meta.url));
 
     let ref: string | null = null;
-    for (const candidate of ["main", "origin/main"]) {
-      try {
-        execFileSync("git", ["rev-parse", "--verify", candidate], { stdio: "ignore" });
-        ref = candidate;
-        break;
-      } catch {
-        // try the next candidate
-      }
+    try {
+      execFileSync("git", ["rev-parse", "--verify", PIN_COMMIT], { stdio: "ignore" });
+      ref = PIN_COMMIT;
+    } catch {
+      // not reachable — shallow checkout, most likely
     }
 
     if (!ref) {
-      console.warn("createWebhookAction base-commit pin: skipped, no local `main` or `origin/main` ref reachable");
+      console.warn(`createWebhookAction base-commit pin: skipped, pinned commit ${PIN_COMMIT} not reachable`);
       return;
     }
 
