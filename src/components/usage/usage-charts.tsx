@@ -12,7 +12,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  type TooltipProps,
+  type TooltipContentProps,
 } from "recharts";
 import { formatCost, formatTokenCount } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ function formatChartDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function CostTooltip({ active, payload }: TooltipProps<number, string>) {
+function CostTooltip({ active, payload }: TooltipContentProps) {
   if (!active || !payload || payload.length === 0) return null;
   const data = payload[0]?.payload as DailyUsagePoint;
   if (!data) return null;
@@ -68,7 +68,7 @@ function CostTooltip({ active, payload }: TooltipProps<number, string>) {
   );
 }
 
-function ModelTooltip({ active, payload }: TooltipProps<number, string>) {
+function ModelTooltip({ active, payload }: TooltipContentProps) {
   if (!active || !payload || payload.length === 0) return null;
   const data = payload[0]?.payload as ModelBreakdownPoint;
   if (!data) return null;
@@ -135,7 +135,7 @@ export function DailyUsageChart({ data }: { data: DailyUsagePoint[] }) {
           stroke="hsl(var(--border))"
           tickFormatter={(v) => `$${v.toFixed(2)}`}
         />
-        <Tooltip content={<CostTooltip />} />
+        <Tooltip content={CostTooltip} />
         <Area
           yAxisId="left"
           type="monotone"
@@ -191,7 +191,7 @@ export function ModelBreakdownChart({ data }: { data: ModelBreakdownPoint[] }) {
             />
           ))}
         </Pie>
-        <Tooltip content={<ModelTooltip />} />
+        <Tooltip content={ModelTooltip} />
         <Legend
           verticalAlign="bottom"
           height={36}
