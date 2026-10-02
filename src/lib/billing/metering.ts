@@ -64,5 +64,10 @@ export async function getQuotaPercentage(
   const plan = PLANS[planSlug];
 
   if (plan.tokenQuota === -1) return 0; // Unlimited
+  // A quota of 0 would otherwise divide by zero (NaN with no usage, Infinity
+  // with any usage) instead of the clean 0-or-100 this function promises its
+  // callers (the /usage dashboard). No seeded plan has tokenQuota: 0 today,
+  // but nothing stops one being added.
+  if (plan.tokenQuota === 0) return usage.totalTokens > 0 ? 100 : 0;
   return Math.min(100, Math.round((usage.totalTokens / plan.tokenQuota) * 100));
 }

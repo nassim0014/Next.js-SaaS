@@ -4,12 +4,11 @@ Created by the closed-improvement-loop's first visit to this repo (2026-08-19). 
 impact; each item is scoped to be one reviewable PR. Pick the top unblocked item on future
 cycles rather than the easiest one.
 
-**Status (2026-09-18):** items 1–8 (first numbering, including the webhook-retry cron
-parallelization) are done. Open, in priority order: the two remaining coverage items filed by
-the backlog-refresh loop on 2026-08-29 (`metering.ts`, `dispatcher.ts` — re-numbered 6–7
-further down; item 8 of that batch, `rag.ts`, is also done — note the duplicate numbering in
-this file). Item 7 (rate limiting, first numbering) was done 2026-09-04 but **only for
-`/api/chat`**; the other three unprotected routes it names are still open — see the item for
+**Status (2026-10-02):** items 1–8 (first numbering, including the webhook-retry cron
+parallelization) are done, and so is item 6 (`metering.ts` coverage, re-numbered — done
+2026-10-02). Open, in priority order: item 7 (`dispatcher.ts` coverage, re-numbered further
+down), then items 9–13. Item 7 (rate limiting, first numbering) was done 2026-09-04 but **only
+for `/api/chat`**; the other three unprotected routes it names are still open — see the item for
 the carried-forward scope note.
 
 **Heads-up for the next cycle (2026-09-04):** ~~`main` is currently red for reasons unrelated to
@@ -195,7 +194,21 @@ Added a minimal Playwright config + smoke spec so the advertised
 - `@playwright/test` was already in devDependencies — no package.json
   change needed.
 
-## 6. `src/lib/billing/metering.ts` has zero test coverage   `source: coverage`
+## 6. ~~`src/lib/billing/metering.ts` has zero test coverage~~ ✅   `source: coverage`
+
+**Done (2026-10-02).** Added `src/lib/billing/metering.test.ts` (11 tests, mocked
+`@/lib/prisma` and `@/lib/ai/cost`, real `PLANS` table): `rollupCurrentPeriod`'s
+upsert shape and idempotency, `hasExceededQuota`'s under/at-boundary/over/unlimited
+cases, and `getQuotaPercentage`'s rounding, 100% cap, and unlimited-plan case.
+
+Also fixed the `tokenQuota === 0` latent bug this item flagged:
+`getQuotaPercentage` now returns a clean `0`/`100` instead of `NaN`/`Infinity` from
+dividing by zero. No seeded plan has `tokenQuota: 0` today, so this was unreachable
+in production, but the regression test (mocking `@/lib/billing/plans` to add a
+zero-quota plan via `vi.doMock`/`vi.resetModules`) was verified to fail against the
+pre-fix code (`expected NaN to be +0`) before the fix and pass after.
+
+**Original filing, for history:**
 
 Filed by the repo-backlog-refresh loop, 2026-08-29. `src/lib/billing/`
 has one test file (`webhooks.test.ts`); `metering.ts` has none. It holds
