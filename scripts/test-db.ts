@@ -38,7 +38,7 @@ const port = parseInt(match[2], 10);
 
 console.log(`📍 Target: ${hostname}:${port}\n`);
 
-// 2. Resolve DNS — show both IPv4 and IPv6
+// 2. Resolve DNS - show both IPv4 and IPv6
 console.log("Step 1: DNS resolution");
 const dns = require("node:dns").promises;
 
@@ -58,7 +58,7 @@ try {
   const addr = await dns.lookup(hostname);
   console.log(`   Default resolves to: ${addr.family === 6 ? "IPv6" : "IPv4"} ${addr.address}`);
   if (addr.family === 6) {
-    console.log("   ⚠️  Default is IPv6 — this is the problem!");
+    console.log("   ⚠️  Default is IPv6 - this is the problem!");
     console.log("   Node.js will try IPv6 first, fail on networks without IPv6, and Prisma won't retry IPv4.");
   }
 } catch (err) {
@@ -73,7 +73,7 @@ try {
   const addr = await dns.lookup(hostname);
   console.log(`   After fix resolves to: ${addr.family === 6 ? "IPv6" : "IPv4"} ${addr.address}`);
   if (addr.family === 4) {
-    console.log("   ✅ Now IPv4 — good!");
+    console.log("   ✅ Now IPv4 - good!");
   }
 } catch (err) {
   console.error(`   ❌ Failed:`, err);
@@ -103,9 +103,9 @@ const canConnect = () =>
 
 const connected = await canConnect();
 if (connected) {
-  console.log("   ✅ TCP connection succeeded — port is reachable");
+  console.log("   ✅ TCP connection succeeded - port is reachable");
 } else {
-  console.log("   ❌ TCP connection failed — port is blocked or unreachable");
+  console.log("   ❌ TCP connection failed - port is blocked or unreachable");
   console.log("   Possible causes:");
   console.log("     - ISP/firewall blocking the port");
   console.log("     - IPv6-only resolution on a network without IPv6");

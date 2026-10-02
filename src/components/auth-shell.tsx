@@ -3,16 +3,16 @@ import { Logo, LogoMark } from "@/components/logo";
 import { Check, ShieldCheck, Activity, Layers } from "lucide-react";
 
 const HIGHLIGHTS = [
-  { icon: Layers, text: "Multi-tenant from the first migration — organizationId everywhere" },
+  { icon: Layers, text: "Multi-tenant from the first migration - organizationId everywhere" },
   { icon: ShieldCheck, text: "RBAC + immutable audit trail on every mutation" },
-  { icon: Activity, text: "AI cost observability — no more surprise token bills" },
+  { icon: Activity, text: "AI cost observability - no more surprise token bills" },
 ];
 
 /**
  * Shared split-screen shell for /login and /signup: form on the left, a
- * branded panel on the right (hidden below lg — the form stays centered on
+ * branded panel on the right (hidden below lg - the form stays centered on
  * mobile instead of squeezing a second column in). No fabricated
- * testimonials/customer logos — the right panel highlights real,
+ * testimonials/customer logos - the right panel highlights real,
  * already-shipped capabilities instead.
  */
 export function AuthShell({ children }: { children: React.ReactNode }) {
@@ -37,7 +37,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="relative space-y-8">
           <blockquote className="text-2xl font-semibold leading-snug">
-            Six systems every AI SaaS founder has to build eventually — pre-integrated, so you skip
+            Six systems every AI SaaS founder has to build eventually - pre-integrated, so you skip
             straight to your actual product.
           </blockquote>
           <ul className="space-y-4">

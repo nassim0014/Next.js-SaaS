@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 /**
  * metering.ts has three functions on the billing hot path (rollupCurrentPeriod,
- * hasExceededQuota, getQuotaPercentage) and, until this file, zero test coverage
- * (docs/IMPROVEMENTS.md item 6). All three are pure wrappers around
+ * hasExceededQuota, getQuotaPercentage) and, until this file, zero test coverage.
+ * All three are pure wrappers around
  * getCurrentPeriodUsage() + the PLANS table, so both are mocked here rather than
  * hitting a real DB.
  */
@@ -68,14 +68,14 @@ describe("billing/metering rollupCurrentPeriod", () => {
     });
   });
 
-  it("is idempotent for the same org + period — calling it twice re-upserts rather than duplicating", async () => {
+  it("is idempotent for the same org + period - calling it twice re-upserts rather than duplicating", async () => {
     getCurrentPeriodUsageMock.mockResolvedValue(usage(10));
     await rollupCurrentPeriod("org-1");
     getCurrentPeriodUsageMock.mockResolvedValue(usage(20));
     await rollupCurrentPeriod("org-1");
 
     expect(upsertMock).toHaveBeenCalledTimes(2);
-    // Same unique-constraint key both times — an upsert, not an insert.
+    // Same unique-constraint key both times - an upsert, not an insert.
     expect(upsertMock.mock.calls[0]![0].where).toEqual(upsertMock.mock.calls[1]![0].where);
     expect(upsertMock.mock.calls[1]![0].update.value).toBe(20);
   });
@@ -87,7 +87,7 @@ describe("billing/metering hasExceededQuota", () => {
     expect(await hasExceededQuota("org-1", "starter")).toBe(false);
   });
 
-  it("returns true exactly at quota — the boundary is inclusive (>=)", async () => {
+  it("returns true exactly at quota - the boundary is inclusive (>=)", async () => {
     getCurrentPeriodUsageMock.mockResolvedValue(usage(500_000));
     expect(await hasExceededQuota("org-1", "starter")).toBe(true);
   });
@@ -124,12 +124,12 @@ describe("billing/metering getQuotaPercentage", () => {
     expect(await getQuotaPercentage("org-1", "enterprise")).toBe(0);
   });
 
-  it("does not divide by zero for a plan with tokenQuota === 0 — returns a clean 0 or 100", async () => {
-    // Regression for docs/IMPROVEMENTS.md item 6: Math.round((n / 0) * 100) is
+  it("does not divide by zero for a plan with tokenQuota === 0 - returns a clean 0 or 100", async () => {
+    // Regression: Math.round((n / 0) * 100) is
     // Infinity (n > 0) or NaN (n === 0) in plain JS, not the clean 0-or-100
     // contract this function promises its callers (the /usage dashboard).
     // No seeded plan currently has tokenQuota: 0, so this is reached only via
-    // a cast — exactly how a future zero-quota plan would reach it too.
+    // a cast - exactly how a future zero-quota plan would reach it too.
     const zeroQuotaSlug = "zero-quota-test-plan" as unknown as PlanSlug;
     vi.doMock("@/lib/billing/plans", async (importOriginal) => {
       const actual = await importOriginal<typeof import("@/lib/billing/plans")>();

@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_APP_NAME ?? "Next.js SaaS",
   description:
-    "Production-grade AI SaaS boilerplate — multi-tenant, RBAC, audit logs, GDPR, MCP-ready.",
+    "Production-grade AI SaaS boilerplate - multi-tenant, RBAC, audit logs, GDPR, MCP-ready.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   links: {
     github: "https://github.com/nassim0014/Next.js-SaaS",

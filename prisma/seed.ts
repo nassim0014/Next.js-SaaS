@@ -103,7 +103,7 @@ async function main() {
   for (const role of Object.values(RoleName)) {
     const perms = DEFAULT_PERMISSIONS_SEED[role];
     for (const action of perms) {
-      if (action === "*") continue; // OWNER bypass — no need to seed
+      if (action === "*") continue; // OWNER bypass - no need to seed
       const perm = await prisma.permission.findUnique({ where: { action } });
       if (!perm) continue;
       await prisma.rolePermission.upsert({
@@ -205,11 +205,11 @@ async function main() {
 }
 
 // ⚠️ Keep this in sync with DEFAULT_PERMISSIONS in src/lib/auth/permissions.ts
-// — they drifted apart once already (seed was missing ADMIN's
+// - they drifted apart once already (seed was missing ADMIN's
 // "billing:manage", "members:invite", "webhooks:create"). can() checks the
 // static DEFAULT_PERMISSIONS map directly, not these seeded DB rows, but
 // getRolePermissions() reads the DB and is documented as the intended
-// production path once RBAC is fully seeded — a mismatch here is a latent
+// production path once RBAC is fully seeded - a mismatch here is a latent
 // bug waiting for that path to be used.
 const DEFAULT_PERMISSIONS_SEED: Record<RoleName, string[]> = {
   OWNER: ["*"],

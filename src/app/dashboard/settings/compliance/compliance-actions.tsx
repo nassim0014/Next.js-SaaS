@@ -30,7 +30,7 @@ export function ExportDataButton() {
     <form action={formAction}>
       <Button className="mt-3" size="sm" variant="outline" type="submit" disabled={isPending}>
         <Download className="h-4 w-4" />
-        {isPending ? "Preparing export…" : "Request Export"}
+        {isPending ? "Preparing export..." : "Request Export"}
       </Button>
     </form>
   );
@@ -62,7 +62,7 @@ export function DeleteAccountButton() {
     <form action={formAction} onSubmit={handleSubmit}>
       <Button className="mt-3" size="sm" variant="destructive" type="submit" disabled={isPending}>
         <Trash2 className="h-4 w-4" />
-        {isPending ? "Deleting…" : "Request Deletion"}
+        {isPending ? "Deleting..." : "Request Deletion"}
       </Button>
     </form>
   );

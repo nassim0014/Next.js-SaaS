@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 /**
  * Lemon Squeezy client setup (server-only).
  *
- * Lemon Squeezy is the Merchant of Record — they handle EU VAT, sales tax,
+ * Lemon Squeezy is the Merchant of Record - they handle EU VAT, sales tax,
  * and compliance. Use them if you sell to EU customers and don't want to
  * register for VAT in every country.
  *

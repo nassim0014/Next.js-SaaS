@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 // rag.ts imports `prisma` at module scope (retrieveRelevantChunks uses it),
-// but none of these tests call that function — only the pure chunkDocument /
+// but none of these tests call that function - only the pure chunkDocument /
 // formatContextForPrompt. Mocked anyway, matching this repo's convention
 // (see rate-limit.test.ts, audit/logger.test.ts), so the import can't
 // accidentally reach a real database.

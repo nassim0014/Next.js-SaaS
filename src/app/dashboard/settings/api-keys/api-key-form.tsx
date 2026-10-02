@@ -15,7 +15,7 @@ export function ApiKeyForm() {
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
-    if (state.key) toast.success("API key created! Copy it now — you won't see it again.");
+    if (state.key) toast.success("API key created! Copy it now - you won't see it again.");
   }, [state]);
 
   return (

@@ -23,7 +23,7 @@ export type StreamChatOptions = {
  *   3. Updating Conversation.tokenCount + estimatedCostUsd
  *
  * This is the ONLY entry point for LLM calls in the app.
- * Never call provider SDKs directly — you'll bypass cost tracking.
+ * Never call provider SDKs directly - you'll bypass cost tracking.
  */
 export async function streamChat(options: StreamChatOptions) {
   const model = resolveModel(options.provider, options.modelName);
@@ -31,7 +31,7 @@ export async function streamChat(options: StreamChatOptions) {
     throw new Error(`Provider ${options.provider} not configured. Set the API key in .env.local`);
   }
 
-  // 1. Budget check — throws if org is over quota
+  // 1. Budget check - throws if org is over quota
   await checkBudget(options.organizationId);
 
   // 2. Stream the response
@@ -43,7 +43,7 @@ export async function streamChat(options: StreamChatOptions) {
     maxOutputTokens: options.maxTokens ?? 4096,
   });
 
-  // 3. Meter usage on completion (fire-and-forget — don't block the stream)
+  // 3. Meter usage on completion (fire-and-forget - don't block the stream)
   // `result.usage` is a `PromiseLike`, not a real `Promise` (no `.catch`),
   // so route it through `Promise.resolve` first to get one back.
   Promise.resolve(result.usage)
@@ -86,7 +86,7 @@ export async function streamChat(options: StreamChatOptions) {
       });
     })
     .catch((err) => {
-      // Don't crash the stream — log and continue
+      // Don't crash the stream - log and continue
       console.error("Failed to meter token usage:", err);
     });
 

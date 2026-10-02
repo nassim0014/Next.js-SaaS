@@ -5,10 +5,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 /**
- * Code-generated Open Graph / Twitter card image — no image asset needed.
+ * Code-generated Open Graph / Twitter card image - no image asset needed.
  * Fixes the previously-dead siteConfig.ogImage: "/og-image.png" reference
  * (there was no public/ directory, so that path 404'd). Next.js
- * auto-detects this file and injects it into the page's metadata — no
+ * auto-detects this file and injects it into the page's metadata - no
  * manual `images: [...]` entry needed in layout.tsx.
  */
 export default function OpengraphImage() {

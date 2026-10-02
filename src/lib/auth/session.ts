@@ -26,7 +26,7 @@ export async function getSession(): Promise<AppSession | null> {
 
   if (!user) return null;
 
-  // Sync to Prisma (idempotent — created on first login via Supabase webhook)
+  // Sync to Prisma (idempotent - created on first login via Supabase webhook)
   const dbUser = await prisma.user.upsert({
     where: { email: user.email ?? "" },
     update: {

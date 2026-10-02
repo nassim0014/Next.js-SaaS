@@ -14,14 +14,14 @@
 | Edge network | ✅ | ✅ (faster in some regions) |
 | Next.js support | Native | Via `@opennextjs/cloudflare` |
 
-## ⚠️ Known risk: this path is unverified, not turnkey
+## ️ Known risk: this path is unverified, not turnkey
 
 Two dependencies this boilerplate relies on are very likely incompatible
 with the Cloudflare Workers/Pages runtime, even with `nodejs_compat`
 enabled in `wrangler.toml`:
 
 - **`argon2`** (used for API-key hashing, see `docs/SECURITY.md`) is a
-  native Node addon — it ships a compiled `.node` binary built via
+  native Node addon - it ships a compiled `.node` binary built via
   `node-gyp`/`napi`. `nodejs_compat` polyfills Node.js *APIs*; it does not
   load compiled native addons. This will very likely fail to load (or fail
   to build) on Cloudflare.
@@ -30,20 +30,20 @@ enabled in `wrangler.toml`:
   `driverAdapters` preview feature or Prisma Accelerate configured) needs
   its native Rust query-engine binary at runtime. That's not deployable to
   Cloudflare Workers without switching to Driver Adapters (e.g.
-  `@prisma/adapter-pg`) or Prisma Accelerate — neither is set up here.
+  `@prisma/adapter-pg`) or Prisma Accelerate - neither is set up here.
   `src/lib/prisma.ts` also directly touches `node:dns` low-level APIs,
   which are generally unsupported/no-op under `nodejs_compat`.
 - Neither `@opennextjs/cloudflare` nor `wrangler` are pinned as
-  dependencies in `package.json` — the build command below relies on `npx`
+  dependencies in `package.json` - the build command below relies on `npx`
   fetching an unpinned version of the Cloudflare adapter at deploy time,
   so the build isn't reproducible or CI-tested the way the Vercel path is.
 
-None of this has been fixed in the codebase — doing so is a real
+None of this has been fixed in the codebase - doing so is a real
 architecture change (driver adapters, swapping `argon2` for a
 Workers-compatible hash, pinning the Cloudflare tooling) with its own risk
 of introducing new bugs, not something to bundle into a doc update. If you
 hit a build or runtime failure following this guide, these three points are
-the most likely cause — start there. **Vercel is the better-tested
+the most likely cause - start there. **Vercel is the better-tested
 deployment target for this boilerplate today**; treat Cloudflare Pages as
 experimental until the above is actually addressed.
 
@@ -53,7 +53,7 @@ experimental until the above is actually addressed.
 2. The boilerplate repo cloned locally
 3. All env vars ready (see `.env.example`)
 
-## Option A — Deploy via Cloudflare Dashboard (easiest)
+## Option A - Deploy via Cloudflare Dashboard (easiest)
 
 1. Go to https://dash.cloudflare.com → Workers & Pages → Create → Pages → Connect to Git
 2. Select your `nassim0014/Next.js-SaaS` GitHub repo
@@ -73,9 +73,9 @@ experimental until the above is actually addressed.
    - `CRON_SECRET` (generate with `openssl rand -hex 32`)
    - `WEBHOOK_SIGNING_SECRET`
    - `NODE_VERSION=20`
-5. Save + Deploy. First build takes 3–5 minutes.
+5. Save + Deploy. First build takes 3-5 minutes.
 
-## Option B — Deploy via Wrangler CLI
+## Option B - Deploy via Wrangler CLI
 
 ```bash
 # 1. Install wrangler
@@ -93,7 +93,7 @@ wrangler pages deploy .open-next --project-name=nextjs-saas
 
 ## Configure environment variables
 
-After the first deploy, set your env vars in the Cloudflare dashboard (Workers & Pages → your project → Settings → Environment variables). They are NOT read from `.env.local` in production — they must be set in Cloudflare.
+After the first deploy, set your env vars in the Cloudflare dashboard (Workers & Pages → your project → Settings → Environment variables). They are NOT read from `.env.local` in production - they must be set in Cloudflare.
 
 ## Set up custom domain
 
@@ -114,7 +114,7 @@ Cloudflare Cron Triggers fire on a schedule and hit your API routes:
    crons = ["0 0 * * *", "0-59/5 * * * *"]
    ```
 2. Or configure in dashboard: Workers & Pages → your project → Triggers → Cron Triggers
-3. Both routes (`/api/cron/usage-meter`, `/api/cron/webhook-retry`) require the `Authorization: Bearer <CRON_SECRET>` header — Cloudflare Cron Triggers can be configured to send custom headers.
+3. Both routes (`/api/cron/usage-meter`, `/api/cron/webhook-retry`) require the `Authorization: Bearer <CRON_SECRET>` header - Cloudflare Cron Triggers can be configured to send custom headers.
 
 ## Verify the deployment
 
@@ -125,9 +125,9 @@ Cloudflare Cron Triggers fire on a schedule and hit your API routes:
 
 ## Known limitations on Cloudflare
 
-- **`argon2` and Prisma's native engine** — see the risk callout above; these are the most likely source of a build or runtime failure, not a vague "some modules may not work"
-- **Build memory** — Cloudflare's build environment has 3GB RAM limit; the boilerplate fits comfortably
-- **No persistent filesystem** — files must use Supabase Storage (we already do)
+- **`argon2` and Prisma's native engine** - see the risk callout above; these are the most likely source of a build or runtime failure, not a vague "some modules may not work"
+- **Build memory** - Cloudflare's build environment has 3GB RAM limit; the boilerplate fits comfortably
+- **No persistent filesystem** - files must use Supabase Storage (we already do)
 
 ## Rollback
 
@@ -137,4 +137,4 @@ Cloudflare Pages keeps every deployment. To rollback:
 2. Find the last working deployment
 3. Click "Rollback to this deployment"
 
-Instant — no rebuild required.
+Instant - no rebuild required.

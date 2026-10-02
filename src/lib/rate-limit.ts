@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 
 /**
- * FIXED-WINDOW RATE LIMITING — keyed by organization id.
+ * FIXED-WINDOW RATE LIMITING - keyed by organization id.
  *
  * `checkBudget()` in lib/ai/cost.ts caps how much an org may spend in a
  * *month*. Nothing capped how fast it could spend it, so a single misbehaving
@@ -22,7 +22,7 @@ import { AppError } from "@/lib/errors";
  * ── The atomicity requirement ────────────────────────────────────────────────
  * A limiter written as "read the count, then write count + 1" is two
  * statements with a gap between them. N concurrent requests can all read the
- * same value and all decide they are under the limit — which is precisely the
+ * same value and all decide they are under the limit - which is precisely the
  * burst this module exists to stop, so the naive version fails at its one job.
  *
  * `consumeRateLimit()` therefore does the read and the write in a **single**
@@ -42,8 +42,8 @@ import { AppError } from "@/lib/errors";
  *
  * ── Failure mode ─────────────────────────────────────────────────────────────
  * This fails CLOSED: a database error propagates and the request 500s rather
- * than sailing past the limiter. That costs nothing in practice — every caller
- * needs the same database a few lines later anyway — and failing open on a
+ * than sailing past the limiter. That costs nothing in practice - every caller
+ * needs the same database a few lines later anyway - and failing open on a
  * limiter would hand an attacker a trivial bypass.
  */
 
@@ -54,7 +54,7 @@ export const RATE_LIMIT_WINDOW_MS = 60_000;
  * Requests per org per window on /api/chat.
  *
  * INCLUSIVE: the 20th request inside a window is allowed; the 21st is
- * rejected. Chosen as a sane default for interactive chat — a human converses
+ * rejected. Chosen as a sane default for interactive chat - a human converses
  * well under it, a runaway loop does not. A named constant rather than an env
  * var on purpose: this is one number to tune in one place, and an env var
  * would add a config surface (plus a parse/validate path) that nothing yet
@@ -70,7 +70,7 @@ export const CHAT_RATE_LIMIT_BUCKET = "chat";
  *
  * Windows are aligned to absolute epoch time, not to first-request time, so
  * every process computes the same boundary without coordinating. The tradeoff
- * of a fixed window is the boundary burst — up to 2x the limit across two
+ * of a fixed window is the boundary burst - up to 2x the limit across two
  * adjacent windows. That is an accepted, well-understood property of this
  * algorithm; a sliding window would remove it at the cost of keeping per
  * request timestamps.
@@ -102,7 +102,7 @@ export type RateLimitState = {
 
 /**
  * Atomically record one request against the org's current window and return
- * the resulting count. Does NOT enforce anything — see `enforceRateLimit()`.
+ * the resulting count. Does NOT enforce anything - see `enforceRateLimit()`.
  */
 export async function consumeRateLimit(input: ConsumeRateLimitInput): Promise<RateLimitState> {
   const windowMs = input.windowMs ?? RATE_LIMIT_WINDOW_MS;
@@ -125,7 +125,7 @@ export async function consumeRateLimit(input: ConsumeRateLimitInput): Promise<Ra
 
   const count = rows[0]?.requestCount;
   if (typeof count !== "number") {
-    // Unreachable in Postgres — INSERT ... ON CONFLICT DO UPDATE always
+    // Unreachable in Postgres - INSERT ... ON CONFLICT DO UPDATE always
     // RETURNINGs its row. Surfaced loudly rather than defaulted to 0, because
     // defaulting would silently disable the limiter.
     throw new AppError("INTERNAL", "Rate limit counter returned no row; refusing to fail open");
@@ -142,7 +142,7 @@ export async function consumeRateLimit(input: ConsumeRateLimitInput): Promise<Ra
 export type EnforceRateLimitInput = ConsumeRateLimitInput & { limit: number };
 
 /**
- * Consume one request and throw `AppError("RATE_LIMITED")` — HTTP 429 — when
+ * Consume one request and throw `AppError("RATE_LIMITED")` - HTTP 429 - when
  * the org has already used its whole window.
  *
  * The limit is INCLUSIVE: with `limit: 20`, the 20th request in the window
@@ -170,7 +170,7 @@ export async function enforceRateLimit(input: EnforceRateLimitInput): Promise<Ra
 
 /**
  * The /api/chat limit. Call once per request, as early as the org id is
- * known — the point is to reject before doing expensive work, and every
+ * known - the point is to reject before doing expensive work, and every
  * rejected request still costs one small write.
  */
 export async function enforceChatRateLimit(

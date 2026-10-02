@@ -6,7 +6,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 /**
  * Embeddings for RAG.
  *
- * Default: Google text-embedding-004 (free tier, 768-dim — pad to 1536 in DB)
+ * Default: Google text-embedding-004 (free tier, 768-dim - pad to 1536 in DB)
  * Paid alt: OpenAI text-embedding-3-small (1536-dim, $0.02/M tokens)
  *
  * The Prisma schema uses `vector(1536)`. If you switch to a different model
@@ -39,7 +39,7 @@ export async function generateEmbedding(text: string, provider: EmbeddingProvide
 }
 
 /**
- * Generate embeddings for multiple text chunks (batched — more efficient).
+ * Generate embeddings for multiple text chunks (batched - more efficient).
  */
 export async function generateEmbeddings(
   texts: string[],

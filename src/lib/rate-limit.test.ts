@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { AppError } from "@/lib/errors";
 
 // The module talks to exactly one Prisma surface: the `$queryRaw` tagged
-// template. Mocking ONLY that is itself part of the contract under test — a
+// template. Mocking ONLY that is itself part of the contract under test - a
 // read-then-write implementation would reach for `prisma.rateLimitWindow
 // .findUnique` / `.update` / `.upsert`, none of which exist here, so it would
 // blow up rather than quietly pass.
@@ -39,9 +39,9 @@ function respondWithCount(count: number): void {
 
 const ORG = "11111111-1111-1111-1111-111111111111";
 
-// 12:00:10 — ten seconds into the 12:00 window.
+// 12:00:10 - ten seconds into the 12:00 window.
 const TEN_PAST = new Date("2026-09-04T12:00:10.000Z");
-// 12:01:00 — the very first instant of the *next* window.
+// 12:01:00 - the very first instant of the *next* window.
 const NEXT_WINDOW = new Date("2026-09-04T12:01:00.000Z");
 
 beforeEach(() => {

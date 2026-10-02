@@ -74,7 +74,7 @@ export default async function GeneralSettingsPage() {
             <div className="space-y-2">
               <Label>Slug</Label>
               <Input value={org.slug} disabled />
-              <p className="text-xs text-muted-foreground">Used in URLs — cannot be changed</p>
+              <p className="text-xs text-muted-foreground">Used in URLs - cannot be changed</p>
             </div>
             <Button type="submit">Save changes</Button>
           </form>

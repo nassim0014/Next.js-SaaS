@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    // Skip session refresh during setup — let the app show a friendly error page
+    // Skip session refresh during setup - let the app show a friendly error page
     return response;
   }
 
@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // This will refresh the session if expired — required for Server Components
+  // This will refresh the session if expired - required for Server Components
   await supabase.auth.getUser();
 
   return response;

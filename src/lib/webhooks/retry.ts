@@ -33,7 +33,7 @@ export async function scheduleRetry(webhookEventId: string): Promise<void> {
   if (!event) return;
 
   if (event.attempts >= MAX_ATTEMPTS) {
-    // Permanently failed — admin should investigate
+    // Permanently failed - admin should investigate
     await prisma.webhookEvent.update({
       where: { id: webhookEventId },
       data: {
@@ -41,7 +41,7 @@ export async function scheduleRetry(webhookEventId: string): Promise<void> {
         nextRetryAt: null,
       },
     });
-    console.warn(`[WEBHOOK PERMANENT FAILURE] event=${webhookEventId} — max attempts exceeded`);
+    console.warn(`[WEBHOOK PERMANENT FAILURE] event=${webhookEventId} - max attempts exceeded`);
     return;
   }
 

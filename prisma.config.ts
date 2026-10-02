@@ -13,7 +13,7 @@ import { defineConfig, env } from "prisma/config";
  * WHY DIRECT_URL AND NOT DATABASE_URL:
  * this project runs on Supabase, where DATABASE_URL points at the pgBouncer
  * connection pooler and DIRECT_URL at the database itself. Migrations cannot
- * run through a transaction-mode pooler — it does not support the session-level
+ * run through a transaction-mode pooler - it does not support the session-level
  * statements and advisory locks Migrate relies on. That split is exactly what
  * the old `directUrl` property existed for, so the CLI keeps using the direct
  * connection here while application queries continue to go through the pooler.
@@ -33,7 +33,7 @@ export default defineConfig({
   // Only declared when DIRECT_URL is actually present.
   //
   // `env()` resolves eagerly at config load, and the config is loaded by EVERY
-  // prisma invocation — including the `prisma generate` that @prisma/client
+  // prisma invocation - including the `prisma generate` that @prisma/client
   // runs from its own postinstall. Declaring it unconditionally therefore
   // breaks `pnpm install` anywhere the variable is absent, which is every CI
   // job here: none of them touch a database, and none define DIRECT_URL.

@@ -76,7 +76,7 @@ export default async function DashboardHome() {
             <li className="flex gap-3">
               <span className="font-bold text-primary">1.</span>
               <span>
-                Create an agent — define its name, system prompt, and the LLM model it should use.
+                Create an agent - define its name, system prompt, and the LLM model it should use.
               </span>
             </li>
             <li className="flex gap-3">
