@@ -279,7 +279,7 @@ Every tenant-scoped Prisma model includes:
 
 ---
 
-## 5. AI Cost Observability - The ⭐ 5th USP
+## 5. AI Cost Observability
 
 Every LLM call flows through `lib/ai/cost.ts`:
 
