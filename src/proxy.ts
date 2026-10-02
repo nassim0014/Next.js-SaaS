@@ -2,23 +2,23 @@ import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * Proxy — runs on every request.
+ * Proxy - runs on every request.
  *
  * (This was `middleware.ts` until Next.js 16 deprecated that file convention
- * in favour of `proxy.ts`. Behaviour is identical — only the file and export
+ * in favour of `proxy.ts`. Behaviour is identical - only the file and export
  * names changed.)
  *
  * 1. Refreshes the Supabase auth session (cookies)
  * 2. Allows public routes through
- * 3. Does NOT do auth checks here — that's handled by requireUser() in the
+ * 3. Does NOT do auth checks here - that's handled by requireUser() in the
  *    layout/route. Why? Because @supabase/ssr uses chunked cookies with
  *    dynamic names (sb-<project-ref>-auth-token.0, .1, ...), so checking
  *    for a specific cookie name is unreliable.
  *
  * Public routes: marketing pages, login, signup, webhooks, health, cron
  * Protected routes: /dashboard, /settings, /api/* (except public ones)
- *    — these call requireUser() which uses supabase.auth.getUser()
- *    — the server-side Supabase client reads all chunked cookies correctly
+ *    - these call requireUser() which uses supabase.auth.getUser()
+ *    - the server-side Supabase client reads all chunked cookies correctly
  */
 
 const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/pricing", "/about", "/blog"];

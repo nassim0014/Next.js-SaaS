@@ -117,7 +117,7 @@ export default async function BillingPage() {
                     <p className="text-xs text-muted-foreground">{formatRelativeTime(e.createdAt)}</p>
                   </div>
                   <span className="font-medium">
-                    {e.amountCents > 0 ? formatCurrency(e.amountCents) : "—"}
+                    {e.amountCents > 0 ? formatCurrency(e.amountCents) : "-"}
                   </span>
                 </div>
               ))}

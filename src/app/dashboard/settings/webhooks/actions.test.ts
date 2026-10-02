@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 // The bug this file regresses: createWebhookAction generates and persists a
-// `whsec_...` signing secret, but on `main` it returns `{}` on success — the
+// `whsec_...` signing secret, but on `main` it returns `{}` on success - the
 // secret is never handed back to the caller, so a customer receiving signed
 // webhook deliveries has no way to obtain the secret needed to verify them.
 
@@ -98,7 +98,7 @@ describe("createWebhookAction", () => {
 // Base-commit pin: proves this is a real behavioral regression, not just a
 // new assertion that happens to pass either way. Resolves against the fixed
 // commit immediately before this fix (PIN_COMMIT below), NOT the `main`
-// branch name — `main` moves, and once this fix merged, a CI run triggered
+// branch name - `main` moves, and once this fix merged, a CI run triggered
 // by that very push checks out a local `main` ref that IS the new HEAD, so
 // resolving "main" at test time compared the fixed code against itself and
 // failed on every subsequent push to main (observed in CI from 2026-09-07
@@ -106,19 +106,19 @@ describe("createWebhookAction", () => {
 // read via `execFile` (never a shell string) and skips cleanly (not error)
 // if that commit isn't reachable, so it degrades gracefully on a shallow CI
 // checkout instead of failing red for an infrastructure reason unrelated to
-// the code under test — most CI runs take this path, since the default
+// the code under test - most CI runs take this path, since the default
 // `actions/checkout` depth here is 1.
 //
 // The extracted base-commit source is written verbatim (no re-typing, no
 // manual transpile) to a throwaway `.ts` file alongside this test and loaded
-// via dynamic import — Vitest/Vite transpiles it and resolves its `@/...`
+// via dynamic import - Vitest/Vite transpiles it and resolves its `@/...`
 // imports exactly as it does for `actions.ts` itself, which routes those
 // imports to the SAME `vi.mock` doubles registered above (mocks apply by
 // resolved module id, not by importing file), so this genuinely executes the
 // old implementation against the old code, not a narration of it.
 const PIN_COMMIT = "e32585b1e975fce9a34d673e90af0c8003d31e17"; // parent of the #91 fix commit
 
-describe("createWebhookAction — base-commit regression pin", () => {
+describe("createWebhookAction - base-commit regression pin", () => {
   it(`commit ${PIN_COMMIT.slice(0, 7)}'s createWebhookAction returns no secret on success (the bug this change fixes)`, async () => {
     const { execFileSync } = await import("node:child_process");
     const path = await import("node:path");
@@ -131,7 +131,7 @@ describe("createWebhookAction — base-commit regression pin", () => {
       execFileSync("git", ["rev-parse", "--verify", PIN_COMMIT], { stdio: "ignore" });
       ref = PIN_COMMIT;
     } catch {
-      // not reachable — shallow checkout, most likely
+      // not reachable - shallow checkout, most likely
     }
 
     if (!ref) {

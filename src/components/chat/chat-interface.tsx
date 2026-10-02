@@ -43,7 +43,7 @@ type InitialMessage = {
 export function ChatInterface({
   agents,
   conversations,
-  // Currently unused inside this component — kept in the props contract
+  // Currently unused inside this component - kept in the props contract
   // since callers pass it and a future feature (e.g. org-scoped realtime
   // presence) will likely need it here.
   orgId: _orgId,
@@ -93,7 +93,7 @@ export function ChatInterface({
       agentId: selectedAgentId,
       conversationId: selectedConversationId,
     }),
-    // Server now returns a plain text stream (`toTextStreamResponse()`) —
+    // Server now returns a plain text stream (`toTextStreamResponse()`) -
     // see the comment in src/app/api/chat/route.ts for why.
     streamProtocol: "text",
     onError: (err) => {
@@ -103,7 +103,7 @@ export function ChatInterface({
       const msg = err.message || "Chat error";
       if (msg === "An error occurred.") {
         toast.error(
-          "The AI provider returned an error. Check the server terminal for details — look for [CHAT STREAM ERROR] in the logs."
+          "The AI provider returned an error. Check the server terminal for details - look for [CHAT STREAM ERROR] in the logs."
         );
       } else {
         toast.error(msg);
@@ -131,7 +131,7 @@ export function ChatInterface({
   }
 
   function handleNewChat() {
-    // Navigate to the bare chat URL — the server component resets selection
+    // Navigate to the bare chat URL - the server component resets selection
     // and seeds `useChat` with an empty message list.
     router.push("/dashboard/chat");
   }

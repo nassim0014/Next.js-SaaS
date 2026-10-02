@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit/logger";
 
 /**
- * GDPR data export — assemble all of a user's data into a ZIP file
+ * GDPR data export - assemble all of a user's data into a ZIP file
  * and upload it to Supabase Storage. Returns a signed URL valid for 7 days.
  *
  * Triggered by the user from /settings/compliance ("Download my data").

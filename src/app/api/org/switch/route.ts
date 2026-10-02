@@ -5,12 +5,12 @@ import { setActiveOrgId, getOrgMembership } from "@/lib/auth/org-context";
 /**
  * Switch the active organization for the current user.
  *
- * GET /api/org/switch?orgId=UUID  — sets the active-org-id cookie and redirects
- * POST /api/org/switch             — sets the cookie, returns JSON
+ * GET /api/org/switch?orgId=UUID  - sets the active-org-id cookie and redirects
+ * POST /api/org/switch             - sets the cookie, returns JSON
  *
  * Security: verifies that the user is an active member of the target org
  * before setting the cookie. Without this check, any authenticated user
- * could set their active-org-id cookie to an org they don't belong to —
+ * could set their active-org-id cookie to an org they don't belong to -
  * a cross-tenant IDOR. The downstream consumers (Server Actions) do
  * re-check membership, but that safety is incidental, not designed.
  */

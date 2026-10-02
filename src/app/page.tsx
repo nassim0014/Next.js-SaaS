@@ -114,7 +114,7 @@ export default function MarketingHome() {
           </h1>
           <p className="max-w-2xl text-lg text-muted-foreground">
             A production-grade Next.js boilerplate for AI SaaS founders. Multi-tenancy, RBAC, and
-            billing are wired in from day one — plus{" "}
+            billing are wired in from day one - plus{" "}
             <strong className="text-foreground">AI cost observability</strong> so a runaway agent
             never turns into a surprise bill.
           </p>
@@ -146,7 +146,7 @@ export default function MarketingHome() {
           {/* ── Product preview ──────────────────────── */}
           <div className="mt-8 w-full max-w-5xl">
             <div className="rounded-xl border bg-card p-1.5 shadow-2xl shadow-primary/10 ring-1 ring-border">
-              {/* Fake browser chrome — grounds the screenshot as "the app", not a random image */}
+              {/* Fake browser chrome - grounds the screenshot as "the app", not a random image */}
               <div className="flex items-center gap-1.5 border-b px-3 py-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
@@ -157,7 +157,7 @@ export default function MarketingHome() {
               </div>
               <Image
                 src="/screenshots/chat-preview.png"
-                alt="The AI chat interface — agent picker, streaming responses, and conversation history"
+                alt="The AI chat interface - agent picker, streaming responses, and conversation history"
                 width={1400}
                 height={560}
                 className="w-full rounded-b-[calc(0.75rem-6px)]"
@@ -175,7 +175,7 @@ export default function MarketingHome() {
             Everything you need, nothing you don&apos;t
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Six systems that would take 4–6 weeks each to build from scratch. Pre-integrated,
+            Six systems that would take 4-6 weeks each to build from scratch. Pre-integrated,
             type-safe, and battle-tested patterns.
           </p>
         </div>

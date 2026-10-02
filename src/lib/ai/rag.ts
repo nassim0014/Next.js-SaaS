@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { generateEmbeddings } from "./embeddings";
 
 /**
- * RAG retrieval — find the most relevant chunks from a KnowledgeBase
+ * RAG retrieval - find the most relevant chunks from a KnowledgeBase
  * for a given query, using pgvector cosine similarity.
  *
  * Pipeline: query → embed → pgvector search → return top-k chunks.
@@ -80,8 +80,8 @@ export function formatContextForPrompt(chunks: RetrievedChunk[]): string {
  * recursive text splitters or layout-aware chunking (e.g., unstructured.io).
  *
  * The cursor advances by `chunkSize - overlap` each iteration. If `overlap`
- * is not strictly smaller than `chunkSize` — e.g. a caller passing
- * `overlap >= chunkSize`, or swapping the two positional args — that step is
+ * is not strictly smaller than `chunkSize` - e.g. a caller passing
+ * `overlap >= chunkSize`, or swapping the two positional args - that step is
  * `<= 0` and `while (i < text.length)` never terminates: `chunks` grows
  * without bound until the process is killed. The defaults are safe, but this
  * is a public function feeding the ingestion pipeline, so it validates its
@@ -96,7 +96,7 @@ export function chunkDocument(text: string, chunkSize = 2000, overlap = 200): st
   }
   if (overlap >= chunkSize) {
     throw new RangeError(
-      `chunkDocument: overlap (${overlap}) must be smaller than chunkSize (${chunkSize}) — ` +
+      `chunkDocument: overlap (${overlap}) must be smaller than chunkSize (${chunkSize}) - ` +
         `otherwise the cursor never advances and this loops forever`
     );
   }

@@ -8,8 +8,8 @@ export type ProviderName = "google" | "openai" | "anthropic" | "groq";
 /**
  * ⭐ Free-tier-first provider registry.
  *
- * Default provider: Google Gemini (free tier — 15 RPM, 1500 req/day)
- * Fallback:        Groq (free tier — 30 RPM, 1000 req/day)
+ * Default provider: Google Gemini (free tier - 15 RPM, 1500 req/day)
+ * Fallback:        Groq (free tier - 30 RPM, 1000 req/day)
  *
  * To use paid providers (OpenAI, Anthropic), set the corresponding API key
  * in .env.local. The registry will pick up paid models automatically.
@@ -37,8 +37,8 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
  * Resolve a provider + model name to a LanguageModel instance.
  * Returns null if the provider has no API key configured.
  *
- * @param provider — one of "google" | "openai" | "anthropic" | "groq"
- * @param modelName — optional model name override (e.g. "gpt-4o-mini").
+ * @param provider - one of "google" | "openai" | "anthropic" | "groq"
+ * @param modelName - optional model name override (e.g. "gpt-4o-mini").
  *   If not provided, uses the provider's default model.
  */
 export function resolveModel(
@@ -83,7 +83,7 @@ export function getAvailableProviders(): ProviderName[] {
 }
 
 /**
- * Default provider — Google Gemini (free) → Groq (free) → OpenAI → Anthropic.
+ * Default provider - Google Gemini (free) → Groq (free) → OpenAI → Anthropic.
  * Returns the first available provider in priority order.
  */
 export function getDefaultProvider(): ProviderName | null {

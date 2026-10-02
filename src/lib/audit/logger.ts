@@ -3,7 +3,7 @@ import type { AuditAction } from "@prisma/client";
 import { headers } from "next/headers";
 
 /**
- * Audit logger — fire-and-forget writes to AuditLog.
+ * Audit logger - fire-and-forget writes to AuditLog.
  *
  * Every mutation in the app calls `audit()` after success:
  *   1. Create a resource → audit("CREATE", "agent", agent.id)
@@ -20,13 +20,13 @@ type AuditInput = {
   resourceType: string;
   resourceId?: string;
   metadata?: Record<string, unknown>;
-  // Optional — auto-populated from request headers if not provided
+  // Optional - auto-populated from request headers if not provided
   ipAddress?: string;
   userAgent?: string;
 };
 
 /**
- * Write an audit log entry. Never throws — failures are logged but do not
+ * Write an audit log entry. Never throws - failures are logged but do not
  * block the caller's operation.
  */
 export async function audit(input: AuditInput): Promise<void> {

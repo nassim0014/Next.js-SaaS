@@ -4,7 +4,7 @@
 
 ## 1. Supabase production setup
 
-1. **Upgrade to Supabase Pro** ($25/mo) — required for:
+1. **Upgrade to Supabase Pro** ($25/mo) - required for:
    - Daily backups
    - No 7-day pause
    - 8GB DB (vs 500MB on free)
@@ -40,7 +40,7 @@
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
    - `CRON_SECRET` (generate with `openssl rand -hex 32`)
    - `WEBHOOK_SIGNING_SECRET`
-3. **Deploy** — Vercel auto-detects Next.js.
+3. **Deploy** - Vercel auto-detects Next.js.
 
 ## 3. Stripe setup
 

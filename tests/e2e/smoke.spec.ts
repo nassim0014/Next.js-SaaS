@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Smoke spec — verifies the landing page loads and renders the expected title.
+ * Smoke spec - verifies the landing page loads and renders the expected title.
  *
  * This is the minimal E2E test that makes the advertised "E2E: Playwright"
  * capability real. Future specs can test auth flows, dashboard interactions,
- * etc. — this one just confirms the dev server boots and the root page renders.
+ * etc. - this one just confirms the dev server boots and the root page renders.
  */
 test.describe("Landing page smoke", () => {
   test("loads and shows the site title", async ({ page }) => {

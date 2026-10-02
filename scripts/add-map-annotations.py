@@ -38,11 +38,11 @@ def process_field(line: str) -> str:
     if not is_camel_case(field_name):
         return line
 
-    # Skip relation fields — they reference other model types (capitalized, not in scalar set)
+    # Skip relation fields - they reference other model types (capitalized, not in scalar set)
     scalar_types = {'String', 'Int', 'Float', 'Boolean', 'DateTime', 'Json', 'Bytes', 'Decimal', 'BigInt'}
     base_type = field_type.rstrip('?[]')
     if base_type == 'Unsupported':
-        pass  # Allow Unsupported — it's a scalar
+        pass  # Allow Unsupported - it's a scalar
     elif base_type not in scalar_types:
         return line  # It's a relation field
 

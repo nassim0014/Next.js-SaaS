@@ -26,13 +26,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const orgs = await getUserOrganizations(session.user.id);
 
   if (orgs.length === 0) {
-    // New user — show onboarding
+    // New user - show onboarding
     redirect("/onboarding");
   }
 
   // Get the active org cookie.
   // If missing or stale, redirect to /api/org/switch (a Route Handler, which
-  // CAN set cookies) instead of calling setActiveOrgId() here — Next.js 16
+  // CAN set cookies) instead of calling setActiveOrgId() here - Next.js 16
   // forbids cookies().set() in Server Components during render.
   const activeOrgId = await getActiveOrgId();
   const activeMembership = orgs.find((m) => m.organizationId === activeOrgId);

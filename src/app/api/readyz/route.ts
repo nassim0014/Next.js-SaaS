@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Readiness probe — checks DB connectivity. Used for Kubernetes / Vercel /
+ * Readiness probe - checks DB connectivity. Used for Kubernetes / Vercel /
  * Cloudflare health checks; traffic should not be routed to an instance
  * until this returns 200.
  */

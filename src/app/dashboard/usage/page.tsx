@@ -32,7 +32,7 @@ export default async function UsagePage() {
       <div>
         <h1 className="text-2xl font-bold">Usage & Cost</h1>
         <p className="text-muted-foreground">
-          Real-time AI cost observability — every LLM call metered to the cent.
+          Real-time AI cost observability - every LLM call metered to the cent.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default async function UsagePage() {
             <TrendingUp className="h-5 w-5" />
             Daily Usage & Cost
           </CardTitle>
-          <CardDescription>Last 30 days — tokens (left axis) and cost (right axis)</CardDescription>
+          <CardDescription>Last 30 days - tokens (left axis) and cost (right axis)</CardDescription>
         </CardHeader>
         <CardContent>
           <DailyUsageChart data={dailyBreakdown} />

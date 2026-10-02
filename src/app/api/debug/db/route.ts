@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Debug endpoint — shows exactly what DATABASE_URL the Next.js process sees,
+ * Debug endpoint - shows exactly what DATABASE_URL the Next.js process sees,
  * and attempts a Prisma query. Use this to diagnose connection issues.
  *
  * ⚠️ SECURITY: This endpoint is DISABLED in production (NODE_ENV=production).
@@ -19,7 +19,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // Block in production — this endpoint leaks infrastructure details.
+  // Block in production - this endpoint leaks infrastructure details.
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "Debug endpoints are disabled in production." },

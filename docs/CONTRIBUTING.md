@@ -16,10 +16,10 @@ pnpm dev
 
 ## Branch naming
 
-- `feat/<short-description>` — new features
-- `fix/<short-description>` — bug fixes
-- `docs/<short-description>` — documentation only
-- `chore/<short-description>` — build, deps, tooling
+- `feat/<short-description>` - new features
+- `fix/<short-description>` - bug fixes
+- `docs/<short-description>` - documentation only
+- `chore/<short-description>` - build, deps, tooling
 
 ## Commit convention
 
@@ -34,10 +34,10 @@ chore(deps): bump prisma to 6.1
 
 ## Before submitting a PR
 
-1. Run `pnpm lint` — fix any errors
-2. Run `pnpm typecheck` — must pass with no errors
-3. Run `pnpm test` — all tests must pass
-4. Run `pnpm build` — production build must succeed
+1. Run `pnpm lint` - fix any errors
+2. Run `pnpm typecheck` - must pass with no errors
+3. Run `pnpm test` - all tests must pass
+4. Run `pnpm build` - production build must succeed
 5. Add tests for any new functionality
 
 ## PR template
@@ -66,9 +66,9 @@ List any breaking changes, or write "None".
 
 ## Code style
 
-- **TypeScript strict mode** — no `any`, use `unknown` + type guards
-- **Zod for validation** — never validate inline
+- **TypeScript strict mode** - no `any`, use `unknown` + type guards
+- **Zod for validation** - never validate inline
 - **Server Actions over API routes** where possible
-- **Every mutation gets an audit log entry** — use `lib/audit/logger.ts`
-- **Tenant-scoped queries must filter by `organizationId`** — never bypass
-- **Money is `Int` cents** — never floats
+- **Every mutation gets an audit log entry** - use `lib/audit/logger.ts`
+- **Tenant-scoped queries must filter by `organizationId`** - never bypass
+- **Money is `Int` cents** - never floats

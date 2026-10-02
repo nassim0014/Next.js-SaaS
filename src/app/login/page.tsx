@@ -33,7 +33,7 @@ function LoginForm() {
         return;
       }
       toast.success("Signed in!");
-      // Hard navigation — forces full page load so the auth cookie is sent
+      // Hard navigation - forces full page load so the auth cookie is sent
       // to the server on the first request. Client-side router.push() can
       // race with cookie propagation and cause /dashboard to bounce back.
       window.location.href = redirect;

@@ -24,7 +24,7 @@
 
 ---
 
-## 🎯 Why use this?
+## Why use this?
 
 You're a SaaS founder. You have a product idea. You don't have 6 weeks to wire up auth, RBAC, multi-tenancy, billing, audit logs, GDPR, RAG, and cost metering.
 
@@ -33,15 +33,15 @@ You're a SaaS founder. You have a product idea. You don't have 6 weeks to wire u
 | | Built from scratch | With this boilerplate |
 |---|---|---|
 | Time to first commit | 0 | 0 |
-| Time to working auth + RBAC | 5–7 days | 0 minutes |
-| Time to multi-tenant schema | 3–5 days | 0 minutes |
-| Time to Stripe + Lemon Squeezy billing | 4–6 days | 0 minutes |
-| Time to AI streaming chat + RAG | 5–7 days | 0 minutes |
-| Time to GDPR export/erase | 2–3 days | 0 minutes |
-| Time to **AI cost observability** | 1–2 weeks | 0 minutes |
-| **Total time saved** | — | **4–6 weeks** |
+| Time to working auth + RBAC | 5-7 days | 0 minutes |
+| Time to multi-tenant schema | 3-5 days | 0 minutes |
+| Time to Stripe + Lemon Squeezy billing | 4-6 days | 0 minutes |
+| Time to AI streaming chat + RAG | 5-7 days | 0 minutes |
+| Time to GDPR export/erase | 2-3 days | 0 minutes |
+| Time to **AI cost observability** | 1-2 weeks | 0 minutes |
+| **Total time saved** | - | **4-6 weeks** |
 
-### ⭐ The Unique Selling Proposition
+### The Unique Selling Proposition
 
 Every AI SaaS founder gets burned by unexpected token bills. Most boilerplates give you a chat box and call it a day. We don't.
 
@@ -53,27 +53,27 @@ Every AI SaaS founder gets burned by unexpected token bills. Most boilerplates g
 - Live `/usage` dashboard shows per-day, per-agent, per-user cost breakdowns
 - No more "why did OpenAI charge me $400 last month?" panic
 
-### 🎁 Six systems, pre-integrated
+### Six systems, pre-integrated
 
-1. **Multi-tenancy** — shared DB with `organizationId` everywhere, RLS as defense-in-depth
-2. **RBAC + Audit Log** — type-safe `can(user, "agents:create")` checks, immutable audit trail on every mutation
-3. **Billing Engine** — Stripe + Lemon Squeezy, idempotent webhook reconciliation, metered usage (not just a checkout button)
-4. **AI Stack** — Vercel AI SDK, multi-provider (Gemini free, Groq free, OpenAI, Anthropic), RAG with pgvector
-5. **⭐ AI Cost Observability** — see above
-6. **GDPR Compliance** — one-click data export (ZIP), one-click right-to-erasure with audit trail
+1. **Multi-tenancy** - shared DB with `organizationId` everywhere, RLS as defense-in-depth
+2. **RBAC + Audit Log** - type-safe `can(user, "agents:create")` checks, immutable audit trail on every mutation
+3. **Billing Engine** - Stripe + Lemon Squeezy, idempotent webhook reconciliation, metered usage (not just a checkout button)
+4. **AI Stack** - Vercel AI SDK, multi-provider (Gemini free, Groq free, OpenAI, Anthropic), RAG with pgvector
+5. **⭐ AI Cost Observability** - see above
+6. **GDPR Compliance** - one-click data export (ZIP), one-click right-to-erasure with audit trail
 
 ---
 
-## 🚀 Quick Start (under 2 minutes)
+## Quick Start (under 2 minutes)
 
 ### Prerequisites
 
-- **Node.js 22.13+** (`node -v`) — required by pnpm 11, which imports the
+- **Node.js 22.13+** (`node -v`) - required by pnpm 11, which imports the
   `node:sqlite` builtin. On Node 20 you'll get `ERR_UNKNOWN_BUILTIN_MODULE`.
   The repo ships an `.nvmrc`, so `nvm use` picks the right version.
 - **pnpm 11+** (`corepack enable` will install the pinned version for you)
-- **A Supabase project** (free tier — [create one here](https://supabase.com/dashboard))
-- **An LLM API key** — at least one of:
+- **A Supabase project** (free tier - [create one here](https://supabase.com/dashboard))
+- **An LLM API key** - at least one of:
   - ⭐ Google Gemini (free): https://aistudio.google.com/apikey
   - ⭐ Groq (free): https://console.groq.com/keys
   - OpenAI (paid): https://platform.openai.com/api-keys
@@ -90,7 +90,7 @@ pnpm install
 
 # 2. Configure environment
 cp .env.example .env.local
-# Edit .env.local — fill in your Supabase URL + anon key + service role key + DATABASE_URL
+# Edit .env.local - fill in your Supabase URL + anon key + service role key + DATABASE_URL
 # And at least one LLM API key (Gemini free works!)
 
 # 3. Set up the database + run
@@ -98,9 +98,9 @@ bash scripts/setup.sh
 pnpm dev
 ```
 
-Open http://localhost:3000 — you're live.
+Open http://localhost:3000 - you're live.
 
-### 🤖 Bonus: MCP-powered development
+### Bonus: MCP-powered development
 
 This is the **only** AI SaaS boilerplate that ships with MCP (Model Context Protocol) pre-configured. Open the project in Cursor, VS Code (with Cline), or Claude Desktop, and your AI assistant can:
 
@@ -112,7 +112,7 @@ See [`docs/MCP-SETUP.md`](docs/MCP-SETUP.md) for the 15-minute setup walkthrough
 
 ---
 
-## 🏗️ Tech Stack
+## ️ Tech Stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -130,7 +130,7 @@ See [`docs/MCP-SETUP.md`](docs/MCP-SETUP.md) for the 15-minute setup walkthrough
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Next.js-SaaS/
@@ -172,12 +172,12 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design rationale
 
 ---
 
-## 💰 Pricing & Monetization
+## Pricing & Monetization
 
 This boilerplate is dual-licensed:
 
-- **MIT** — for personal / learning / open-source projects. Free forever.
-- **Commercial** — required if you sell a product built on this, or use it internally at a company with >5 developers.
+- **MIT** - for personal / learning / open-source projects. Free forever.
+- **Commercial** - required if you sell a product built on this, or use it internally at a company with >5 developers.
 
 Plans ship pre-configured in the `Plan` table (seeded by `prisma/seed.ts`):
 
@@ -192,7 +192,7 @@ Customize plans in `src/lib/billing/plans.ts` + `prisma/seed.ts` (single source 
 
 ---
 
-## 🔧 Customization
+## Customization
 
 ### Add a new LLM model
 
@@ -215,11 +215,11 @@ Customize plans in `src/lib/billing/plans.ts` + `prisma/seed.ts` (single source 
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Free-tier-friendly deploy (recommended)
 
-Deploy to **Cloudflare Pages** (free, commercial-OK) — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full guide.
+Deploy to **Cloudflare Pages** (free, commercial-OK) - see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full guide.
 
 ### Vercel
 
@@ -240,7 +240,7 @@ Use a process manager (PM2, systemd) + a reverse proxy (Caddy, nginx).
 
 ---
 
-## 🔐 Security
+## Security
 
 - **Row-Level Security** on every tenant-scoped table (see `supabase/migrations/0002_rls_policies.sql`)
 - **Service-role key** never exposed to the client (enforced via `lib/supabase/admin.ts`)
@@ -253,7 +253,7 @@ See [`docs/SECURITY.md`](docs/SECURITY.md) for the full threat model.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Doc | What's inside |
 |---|---|
@@ -266,17 +266,17 @@ See [`docs/SECURITY.md`](docs/SECURITY.md) for the full threat model.
 
 ---
 
-## 🛣️ Roadmap
+## ️ Roadmap
 
-- [x] **v1.1** — Usage dashboard charts (Recharts), per-agent cost breakdown
-- [ ] **v1.2** — SSO/SAML for enterprise tier
-- [ ] **v1.3** — Realtime presence (Supabase Realtime) for collaborative chat
-- [ ] **v1.4** — Edge Functions for hot-path queries (latency < 50ms)
-- [ ] **v2.0** — White-label mode (custom branding per org)
+- [x] **v1.1** - Usage dashboard charts (Recharts), per-agent cost breakdown
+- [ ] **v1.2** - SSO/SAML for enterprise tier
+- [ ] **v1.3** - Realtime presence (Supabase Realtime) for collaborative chat
+- [ ] **v1.4** - Edge Functions for hot-path queries (latency < 50ms)
+- [ ] **v2.0** - White-label mode (custom branding per org)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 PRs welcome! Please read [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) first.
 
@@ -287,11 +287,11 @@ PRs welcome! Please read [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) first.
 
 ---
 
-## 💼 Hire the author
+## Hire the author
 
 Building a custom AI SaaS? Need help architecting your multi-tenant system? I'm available for:
 
-- **Fractional CTO / Architect** engagements (1–3 days/week)
+- **Fractional CTO / Architect** engagements (1-3 days/week)
 - **Code reviews** of existing AI SaaS codebases
 - **Custom features** built on top of this boilerplate
 
@@ -300,7 +300,7 @@ GitHub: [@nassim0014](https://github.com/nassim0014)
 
 ---
 
-## 📄 License
+## License
 
 Dual-licensed under [MIT](LICENSE) (personal/learning) and Commercial (production SaaS).
 

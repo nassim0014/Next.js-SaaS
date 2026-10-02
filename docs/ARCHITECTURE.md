@@ -1,4 +1,4 @@
-# Architecture — AI SaaS Boilerplate
+# Architecture - AI SaaS Boilerplate
 
 > Phase 2 design artifact. Folder structure, data-flow, and design rationale.
 > All paths are relative to project root.
@@ -28,7 +28,7 @@
 ```
 saas-boilerplate/
 ├── .mcp.json                         # ⭐ MCP servers for Cursor/Claude Desktop
-├── .env.example                      # Template — copy to .env.local
+├── .env.example                      # Template - copy to .env.local
 ├── .env.local                        # Local secrets (gitignored)
 ├── .gitignore
 ├── .eslintrc.cjs                     # strict + zero-any rule
@@ -69,7 +69,7 @@ saas-boilerplate/
 │   │   │   ├── callback/route.ts     # OAuth + magic-link redirect
 │   │   │   └── layout.tsx
 │   │   │
-│   │   ├── (app)/                    # Org-scoped — guarded by middleware
+│   │   ├── (app)/                    # Org-scoped - guarded by middleware
 │   │   │   ├── dashboard/page.tsx
 │   │   │   │
 │   │   │   ├── agents/               # AI agent CRUD + chat
@@ -145,7 +145,7 @@ saas-boilerplate/
 │   │   │   ├── stream.ts             # Streaming helpers (Vercel AI SDK)
 │   │   │   └── cost.ts               # ⭐ Token metering + budget enforcement
 │   │   ├── auth/
-│   │   │   ├── rbac.ts               # can(user, action, resource) — type-safe
+│   │   │   ├── rbac.ts               # can(user, action, resource) - type-safe
 │   │   │   ├── session.ts            # getSession(), requireUser()
 │   │   │   ├── org-context.ts        # getActiveOrg(), switchOrg()
 │   │   │   └── permissions.ts        # Permission map per role
@@ -279,7 +279,7 @@ Every tenant-scoped Prisma model includes:
 
 ---
 
-## 5. AI Cost Observability — The ⭐ 5th USP
+## 5. AI Cost Observability - The ⭐ 5th USP
 
 Every LLM call flows through `lib/ai/cost.ts`:
 
@@ -295,9 +295,9 @@ streamChat({ orgId, userId, conversationId, model, messages })
 
 This powers:
 - **Live cost dashboard** at `/usage` (per-day, per-agent, per-user breakdowns)
-- **Budget caps** — when an org hits 80% / 100% of plan quota, fire email + webhook
-- **Usage-based billing** — overage priced per 1K tokens, reconciled via Stripe metered billing
-- **Per-conversation cost attribution** — show users "this chat cost $0.04"
+- **Budget caps** - when an org hits 80% / 100% of plan quota, fire email + webhook
+- **Usage-based billing** - overage priced per 1K tokens, reconciled via Stripe metered billing
+- **Per-conversation cost attribution** - show users "this chat cost $0.04"
 
 No AI SaaS boilerplate ships this. Founders get burned by token bills because they can't see them. We solve that on day one.
 
@@ -309,7 +309,7 @@ Every doc below ships as a stub in Phase 3:
 
 | File | Purpose |
 |---|---|
-| `README.md` | The Hook (Phase 4) — landing page of the repo |
+| `README.md` | The Hook (Phase 4) - landing page of the repo |
 | `docs/ARCHITECTURE.md` | This file |
 | `docs/DEPLOYMENT.md` | Step-by-step Vercel + Supabase + Stripe go-live |
 | `docs/MCP-SETUP.md` | MCP server install for Cursor/Claude Desktop/VS Code |

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /**
  * Suspense fallback for the usage dashboard while token-usage aggregation
- * queries and the Recharts data resolve — shaped to match the real page's
+ * queries and the Recharts data resolve - shaped to match the real page's
  * stat cards + chart layout.
  */
 export default function UsageLoading() {

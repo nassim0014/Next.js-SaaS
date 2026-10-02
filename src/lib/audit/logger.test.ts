@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({
   Prisma: { JsonNull: null, InputJsonValue: undefined },
 }));
 
-// Mock next/headers — audit() reads x-forwarded-for + user-agent
+// Mock next/headers - audit() reads x-forwarded-for + user-agent
 vi.mock("next/headers", () => ({
   headers: vi.fn().mockResolvedValue({
     get: (name: string) => {
@@ -25,7 +25,7 @@ vi.mock("next/headers", () => ({
 
 const { audit, queryAuditLog } = await import("@/lib/audit/logger");
 
-describe("audit/logger — audit()", () => {
+describe("audit/logger - audit()", () => {
   beforeEach(() => {
     createMock.mockClear();
     createMock.mockResolvedValue(undefined);
@@ -87,7 +87,7 @@ describe("audit/logger — audit()", () => {
     expect(call.data.userId).toBeNull();
   })
 
-  it("never throws — swallows errors and logs to console", async () => {
+  it("never throws - swallows errors and logs to console", async () => {
     createMock.mockRejectedValue(new Error("DB down"));
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -107,7 +107,7 @@ describe("audit/logger — audit()", () => {
   })
 })
 
-describe("audit/logger — queryAuditLog()", () => {
+describe("audit/logger - queryAuditLog()", () => {
   it("queries with the given organizationId and default limit", async () => {
     const result = await queryAuditLog({
       organizationId: "org-1",

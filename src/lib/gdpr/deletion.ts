@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit/logger";
 
 /**
- * GDPR right-to-erasure — anonymize a user's data while preserving
+ * GDPR right-to-erasure - anonymize a user's data while preserving
  * the integrity of audit logs and financial records.
  *
  * What gets DELETED:
@@ -20,8 +20,8 @@ import { audit } from "@/lib/audit/logger";
  *   - The User record itself (after anonymization)
  *   - The Supabase Auth user
  *
- * Steps 1–7 are wrapped in a single `prisma.$transaction(...)` so the
- * database either sees the fully-erased state or the original state —
+ * Steps 1-7 are wrapped in a single `prisma.$transaction(...)` so the
+ * database either sees the fully-erased state or the original state -
  * never the half-erased, unreconcilable state a GDPR erasure must not
  * be able to reach (item 2). Step 8 (Supabase Auth deletion) is an
  * external call that can't join the Postgres transaction; it runs last,
@@ -29,7 +29,7 @@ import { audit } from "@/lib/audit/logger";
  * that the user is DB-erased but still has a live Auth session.
  */
 export async function deleteUserData(userId: string, organizationId: string): Promise<void> {
-  // Steps 1–7: all Postgres writes, atomic.
+  // Steps 1-7: all Postgres writes, atomic.
   await prisma.$transaction(async (tx) => {
     // 1. Delete conversations + messages (cascade handles messages)
     await tx.conversation.deleteMany({
@@ -87,7 +87,7 @@ export async function deleteUserData(userId: string, organizationId: string): Pr
   });
 
   // 8. Delete the Supabase Auth user (this signs them out everywhere).
-  //    External call — can't join the Postgres transaction above.
+  //    External call - can't join the Postgres transaction above.
   //    If this fails, the user is DB-erased but still has a live Auth
   //    session; the thrown error lets the caller alert an operator.
   const admin = supabaseAdmin();

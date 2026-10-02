@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * Playwright E2E configuration.
  *
- * Minimal setup for the smoke spec — the landing page loads and renders
+ * Minimal setup for the smoke spec - the landing page loads and renders
  * the expected title. Future specs can be added under tests/e2e/.
  *
  * Run: pnpm test:e2e

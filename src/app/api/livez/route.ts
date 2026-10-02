@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 /**
- * Liveness probe — returns 200 if the process is alive. No dependency
+ * Liveness probe - returns 200 if the process is alive. No dependency
  * checks (that's /api/readyz). Used for Kubernetes / Vercel / Cloudflare
  * health checks.
  */

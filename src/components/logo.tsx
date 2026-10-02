@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
 /**
- * Brand mark — a simple abstract spark/bolt in a rounded square, deliberately
+ * Brand mark - a simple abstract spark/bolt in a rounded square, deliberately
  * generic (not tied to a specific product name) since this is a boilerplate
  * meant to be rebranded. Swap this out once a real brand name/logo exists.
  */
@@ -23,7 +23,7 @@ export function LogoMark({ className }: { className?: string }) {
 }
 
 /**
- * Full logo lockup — mark + wordmark. Used in the marketing header, dashboard
+ * Full logo lockup - mark + wordmark. Used in the marketing header, dashboard
  * sidebar, and auth pages.
  */
 export function Logo({ className, showText = true }: { className?: string; showText?: boolean }) {

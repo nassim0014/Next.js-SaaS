@@ -13,7 +13,7 @@ import type { SubscriptionStatus } from "@prisma/client";
  * Stripe webhook handler.
  *
  * Receives events from Stripe and reconciles them into our DB.
- * Idempotent — duplicate deliveries are deduplicated via providerEventId.
+ * Idempotent - duplicate deliveries are deduplicated via providerEventId.
  *
  * Configure in Stripe Dashboard → Webhooks:
  *   URL: https://your-domain.com/api/webhooks/stripe
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     (event.data.object as { metadata?: { orgId?: string } }).metadata?.orgId ?? null;
 
   if (!orgId) {
-    // No orgId — likely a test event or unrelated event. Acknowledge and skip.
+    // No orgId - likely a test event or unrelated event. Acknowledge and skip.
     return NextResponse.json({ received: true, skipped: true });
   }
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         };
 
         // Resolve which Plan this subscription is actually for from its
-        // Stripe Price ID — never fall back to a guessed/default plan.
+        // Stripe Price ID - never fall back to a guessed/default plan.
         // A subscription always has at least one item; if it does not, the
         // payload is malformed and there is no price to resolve a Plan from.
         const item = sub.items?.data?.[0];
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Guard the period explicitly. `new Date(undefined * 1000)` is an
-        // Invalid Date, which Prisma would happily persist — a subscription row
+        // Invalid Date, which Prisma would happily persist - a subscription row
         // with a corrupt billing period fails silently and is only noticed when
         // renewal or entitlement checks start behaving strangely. Fail the
         // webhook instead so Stripe retries and the problem is visible.
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        // Unhandled event type — acknowledge to prevent Stripe retries
+        // Unhandled event type - acknowledge to prevent Stripe retries
         return NextResponse.json({ received: true, unhandled: event.type });
     }
 

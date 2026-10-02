@@ -1,5 +1,5 @@
 // =============================================================================
-// AI SaaS Boilerplate — Prisma Schema
+// AI SaaS Boilerplate - Prisma Schema
 // -----------------------------------------------------------------------------
 // Provider:   PostgreSQL (Supabase)
 // Multi-tenancy: shared DB, `organizationId` on every tenant-scoped table
@@ -376,7 +376,7 @@ model Embedding {
 }
 
 // =============================================================================
-// AI COST OBSERVABILITY  — ⭐ THE 5TH CREATIVE USP
+// AI COST OBSERVABILITY  - ⭐ THE 5TH CREATIVE USP
 // -----------------------------------------------------------------------------
 // Every LLM call is metered and attributed to org + user + conversation + model.
 // This powers: budget caps, usage-based billing, per-tenant cost dashboards,
@@ -413,14 +413,14 @@ model TokenUsage {
 // month of budget in a minute before the monthly cap trips.
 //
 // One row per (organization, bucket, window). `windowStart` is the window's
-// floor timestamp, so the row identity is derived — no read is needed to find
+// floor timestamp, so the row identity is derived - no read is needed to find
 // it. Writes go through a single `INSERT ... ON CONFLICT DO UPDATE ... SET
 // request_count = request_count + 1 RETURNING request_count` (see
 // src/lib/rate-limit.ts), which is why the @@unique below is load-bearing
 // rather than merely a data-integrity nicety: it is the conflict target that
 // makes the increment atomic under concurrent requests.
 //
-// Soft reference on organizationId (no relation), per design principle 3 —
+// Soft reference on organizationId (no relation), per design principle 3 -
 // this is a high-volume table on the hot path.
 // =============================================================================
 
@@ -461,7 +461,7 @@ model Plan {
   storageQuotaMb       Int     @map("storage_quota_mb")
   features             Json?
   isActive             Boolean @default(true) @map("is_active")
-  // Stripe Price IDs — used to resolve an incoming subscription webhook back
+  // Stripe Price IDs - used to resolve an incoming subscription webhook back
   // to the Plan the customer actually purchased (see lib/billing/webhooks.ts
   // reconcileSubscription()). NULL for plans with no Stripe price yet (e.g.
   // Free, or Enterprise "contact sales"). Populated by prisma/seed.ts from

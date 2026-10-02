@@ -52,7 +52,7 @@ next-env.d.ts
 /playwright-report/
 /playwright/.cache/
 
-# MCP — local agent state, never commit
+# MCP - local agent state, never commit
 .mcp-cache/
 .cursor/
 .cline/
@@ -68,7 +68,7 @@ Thumbs.db
 /scripts/.cache/
 /tmp/
 
-# AI coding agent tool-output transcripts — never intentionally committed,
+# AI coding agent tool-output transcripts - never intentionally committed,
 # but agentic tools sometimes write session logs here; ignore by default so
 # one doesn't end up leaked into the repo again.
 /tool-results/

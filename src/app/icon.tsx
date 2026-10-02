@@ -4,7 +4,7 @@ export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
 /**
- * Code-generated favicon — no image asset needed. Same abstract spark/bolt
+ * Code-generated favicon - no image asset needed. Same abstract spark/bolt
  * mark as src/components/logo.tsx, kept in sync manually since this route
  * runs in the Edge runtime and can't import a React DOM component.
  */
