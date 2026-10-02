@@ -4,7 +4,7 @@ import { timingSafeEqual } from "node:crypto";
  * Constant-time string comparison to prevent timing attacks on secret checks.
  *
  * Use this for any comparison involving API keys, webhook secrets, auth
- * tokens, or CRON_SECRET. NEVER use `===` or `!==` for secret comparisons —
+ * tokens, or CRON_SECRET. NEVER use `===` or `!==` for secret comparisons -
  * the comparison time leaks information about how many bytes match.
  *
  * @example

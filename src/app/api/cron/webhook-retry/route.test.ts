@@ -25,7 +25,7 @@ vi.mock("@/lib/webhooks/signer", () => ({ signWebhook: () => "test-signature" })
 
 const { GET } = await import("@/app/api/cron/webhook-retry/route");
 
-const CRON_SECRET = "cron-secret-for-tests"; // gitleaks:allow — test fixture
+const CRON_SECRET = "cron-secret-for-tests"; // gitleaks:allow - test fixture
 
 function cronRequest(auth: string = `Bearer ${CRON_SECRET}`): NextRequest {
   return new Request("https://app.test/api/cron/webhook-retry", {
@@ -122,7 +122,7 @@ describe("cron/webhook-retry", () => {
     // Regression guard for the "50 events x 10s timeout = up to 500s wall
     // time" problem: a sequential loop can only ever have 1 fetch in flight,
     // so this test fails against the pre-fix implementation (maxInFlight
-    // would be 1). It also asserts the concurrency is *bounded* — fully
+    // would be 1). It also asserts the concurrency is *bounded* - fully
     // unbounded fan-out is its own risk when many events can share an
     // endpoint/org.
     const N = 25;
@@ -177,7 +177,7 @@ describe("cron/webhook-retry", () => {
     const body = (await res.json()) as { retried: number; succeeded: number };
 
     // 1 response ok + 1 response non-ok both count toward "retried" (a
-    // response was obtained); the thrown/timed-out one does not — matching
+    // response was obtained); the thrown/timed-out one does not - matching
     // the pre-existing counter semantics this refactor must not change.
     expect(body.retried).toBe(2);
     expect(body.succeeded).toBe(1);

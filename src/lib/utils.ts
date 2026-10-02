@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /**
- * Tailwind class merger — used by every shadcn/ui component.
+ * Tailwind class merger - used by every shadcn/ui component.
  *
  * @example
  *   <button className={cn("px-4 py-2", isActive && "bg-blue-500")} />
@@ -13,7 +13,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Format a number of cents as a USD currency string.
- * Money is stored as Int cents throughout the app — never floats.
+ * Money is stored as Int cents throughout the app - never floats.
  *
  * @example
  *   formatCurrency(1999) // "$19.99"
@@ -100,5 +100,5 @@ export function sleep(ms: number): Promise<void> {
  */
 export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 1) + "…";
+  return str.slice(0, maxLength - 1) + "...";
 }

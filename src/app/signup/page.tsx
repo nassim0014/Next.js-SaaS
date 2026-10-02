@@ -43,10 +43,10 @@ export default function SignupPage() {
       }
       // Signed up + auto-confirmed (e.g., when email auth is set to "no confirmation")
       toast.success("Account created!");
-      // Hard navigation — forces full page load so auth cookie is sent reliably.
+      // Hard navigation - forces full page load so auth cookie is sent reliably.
       // Built as an absolute URL (rather than a relative "/dashboard" string)
       // so @next/next/no-location-assign-relative-destination doesn't flag
-      // this as a candidate for router.push() — a client-side transition
+      // this as a candidate for router.push() - a client-side transition
       // wouldn't force the reload this cookie handoff depends on.
       window.location.href = new URL("/dashboard", window.location.origin).toString();
     } catch (err) {
@@ -81,7 +81,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md duration-500 animate-in fade-in slide-in-from-bottom-2">
         <CardHeader className="text-center">
           <CardTitle>Create your account</CardTitle>
-          <CardDescription>Start building for free — no credit card required</CardDescription>
+          <CardDescription>Start building for free - no credit card required</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailSignUp} className="space-y-3">

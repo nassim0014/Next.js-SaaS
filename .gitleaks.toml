@@ -8,9 +8,9 @@ title = "gitleaks config"
 useDefault = true
 
 [allowlist]
-description = "Reviewed false positives — test fixtures, not real secrets"
+description = "Reviewed false positives - test fixtures, not real secrets"
 regexes = [
-  # Hardcoded fake HMAC secret in src/lib/webhooks/signer.test.ts — not a
+  # Hardcoded fake HMAC secret in src/lib/webhooks/signer.test.ts - not a
   # real credential, just high-entropy enough to trip generic-api-key.
   '''test-signing-secret-abc123''',
 ]

@@ -2,10 +2,10 @@ import { RoleName, Permission } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Permission map — the actions a role can perform.
+ * Permission map - the actions a role can perform.
  * Mirrors the `Permission` table (seeded by `prisma/seed.ts`).
  *
- * Format: "<domain>:<action>" — e.g., "conversations:create", "billing:manage"
+ * Format: "<domain>:<action>" - e.g., "conversations:create", "billing:manage"
  */
 
 // Static fallback (used before DB is seeded). Mirrors the seed file.
@@ -72,7 +72,7 @@ export function hasPermission(role: RoleName, requiredAction: string): boolean {
 }
 
 /**
- * Type-safe `can()` function — the primary entry point for RBAC checks.
+ * Type-safe `can()` function - the primary entry point for RBAC checks.
  *
  * @example
  *   const session = await requireUser();

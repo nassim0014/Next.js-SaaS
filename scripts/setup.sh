@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Next.js SaaS Boilerplate — One-shot setup script
+# Next.js SaaS Boilerplate - One-shot setup script
 #
 # Usage:
 #   bash scripts/setup.sh
@@ -15,7 +15,7 @@
 #   7. Runs the dev server
 #
 # Prerequisites:
-#   - Node.js 22.13+ (pnpm 11 needs the node:sqlite builtin — see .nvmrc)
+#   - Node.js 22.13+ (pnpm 11 needs the node:sqlite builtin - see .nvmrc)
 #   - A Supabase project (https://supabase.com)
 #   - .env.local populated with Supabase URL + anon key + service role key
 # =============================================================================
@@ -28,7 +28,7 @@ if ! command -v node &> /dev/null; then
   echo "❌ Node.js not found. Install from https://nodejs.org (v22.13+)"
   exit 1
 fi
-# pnpm 11 imports node:sqlite, a builtin that only exists from Node 22.13 —
+# pnpm 11 imports node:sqlite, a builtin that only exists from Node 22.13 -
 # on anything older `pnpm install` dies with ERR_UNKNOWN_BUILTIN_MODULE.
 NODE_MAJOR=$(node -v | cut -dv -f2 | cut -d. -f1)
 NODE_MINOR=$(node -v | cut -dv -f2 | cut -d. -f2)

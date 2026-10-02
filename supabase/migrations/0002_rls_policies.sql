@@ -11,7 +11,7 @@
 --   2. Policy: users can only see rows where organization_id matches an org
 --      they're an active member of
 --   3. The app uses the service-role key for cross-tenant operations (admin,
---      cron, webhooks) — RLS is bypassed
+--      cron, webhooks) - RLS is bypassed
 --
 -- IDEMPOTENT: This migration is safe to re-run. Every CREATE POLICY is
 -- preceded by a DROP POLICY IF EXISTS, so existing policies are replaced

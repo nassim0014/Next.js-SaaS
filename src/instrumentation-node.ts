@@ -1,5 +1,5 @@
 /**
- * DNS setup helper — loaded only in the Node.js runtime.
+ * DNS setup helper - loaded only in the Node.js runtime.
  *
  * This file is dynamically imported from instrumentation.ts so that
  * Turbopack's static analysis doesn't see node:dns when evaluating

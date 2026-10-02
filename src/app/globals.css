@@ -11,7 +11,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    /* Brand — indigo/violet. Chosen to extend the color already used for
+    /* Brand - indigo/violet. Chosen to extend the color already used for
        "tokens" in the usage dashboard's Recharts gradient
        (src/components/usage/usage-charts.tsx), instead of introducing an
        unrelated third hue. */
@@ -30,7 +30,7 @@
     --input: 240 5.9% 90%;
     --ring: 243 75% 59%;
 
-    /* Semantic status colors — none existed before. Used for
+    /* Semantic status colors - none existed before. Used for
        subscription/webhook/audit status pills (ACTIVE, PAST_DUE, FAILED,
        etc.) instead of overloading --destructive for every non-success
        state. */
@@ -41,7 +41,7 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    /* Hero/CTA gradient — indigo to violet. */
+    /* Hero/CTA gradient - indigo to violet. */
     --gradient-from: 243 75% 59%;
     --gradient-to: 262 70% 58%;
 

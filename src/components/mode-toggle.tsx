@@ -13,7 +13,7 @@ import {
 /**
  * Light/dark/system theme switcher. The next-themes provider
  * (src/components/providers.tsx) was already wired up with
- * attribute="class" — this was the only missing piece, an actual on-page
+ * attribute="class" - this was the only missing piece, an actual on-page
  * control to flip it.
  */
 export function ModeToggle() {

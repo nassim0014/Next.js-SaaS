@@ -28,7 +28,7 @@ vi.mock("@/lib/prisma", () => ({
   Prisma: { JsonNull: null },
 }))
 
-// Mock the audit logger — it's called inside the transaction
+// Mock the audit logger - it's called inside the transaction
 const auditMock: Mock = vi.fn().mockResolvedValue(undefined)
 vi.mock("@/lib/audit/logger", () => ({
   audit: (...args: unknown[]) => auditMock(...(args as [])),
@@ -48,7 +48,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 const { deleteUserData } = await import("@/lib/gdpr/deletion");
 
-describe("gdpr/deletion — transaction wrapper (item 2)", () => {
+describe("gdpr/deletion - transaction wrapper (item 2)", () => {
   beforeEach(() => {
     deleteManyMock.mockClear()
     updateManyMock.mockClear()
@@ -82,7 +82,7 @@ describe("gdpr/deletion — transaction wrapper (item 2)", () => {
     await deleteUserData("user-1", "org-1");
 
     expect(updateManyMock).toHaveBeenCalled();
-    // TokenUsage is the first updateMany call — userId set to null
+    // TokenUsage is the first updateMany call - userId set to null
     const tokenUsageCall = updateManyMock.mock.calls[0]![0];
     expect(tokenUsageCall.where).toMatchObject({
       userId: "user-1",

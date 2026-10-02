@@ -7,7 +7,7 @@ type CookieOpts = { name: string; value: string; options?: Record<string, unknow
  * Server-side Supabase client for use in Server Components, Route Handlers,
  * and Server Actions. Reads the user's session from cookies.
  *
- * Authenticated — subject to RLS policies based on the user's JWT.
+ * Authenticated - subject to RLS policies based on the user's JWT.
  */
 export async function supabaseServer() {
   const cookieStore = await cookies();
@@ -30,7 +30,7 @@ export async function supabaseServer() {
             cookieStore.set(name, value, options as Record<string, unknown>)
           );
         } catch {
-          // Called from a Server Component — safe to ignore, middleware refreshes session.
+          // Called from a Server Component - safe to ignore, middleware refreshes session.
         }
       },
     },

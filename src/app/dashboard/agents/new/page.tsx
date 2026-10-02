@@ -78,7 +78,7 @@ export default async function NewAgentPage() {
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.displayName} ({m.provider})
-                    {m.inputCostPer1K === 0 ? " — FREE" : ` — $${m.inputCostPer1K}/1K in`}
+                    {m.inputCostPer1K === 0 ? " - FREE" : ` - $${m.inputCostPer1K}/1K in`}
                   </option>
                 ))}
               </select>

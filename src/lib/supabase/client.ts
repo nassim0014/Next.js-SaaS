@@ -2,7 +2,7 @@ import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * Browser-side Supabase client.
- * Uses the anon key — RLS policies enforce authorization.
+ * Uses the anon key - RLS policies enforce authorization.
  *
  * Use this in Client Components and hooks. For Server Components,
  * use `supabaseServer()` from `lib/supabase/server.ts`.

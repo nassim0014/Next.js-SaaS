@@ -1,4 +1,4 @@
-// Test script — run with: npx tsx scripts/test-gemini.ts
+// Test script - run with: npx tsx scripts/test-gemini.ts
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 

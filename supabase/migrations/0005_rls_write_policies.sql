@@ -3,12 +3,12 @@
 --
 -- INSERT/UPDATE/DELETE companions to the SELECT-only policies in
 -- 0002_rls_policies.sql, plus a fix for `invitations`, which had RLS
--- enabled with no policies defined at all (not even SELECT) — under real
+-- enabled with no policies defined at all (not even SELECT) - under real
 -- RLS enforcement that table was completely inaccessible.
 --
 -- SCOPE: write policies are added for tables where a user acting through a
 -- session-scoped Supabase client (not the app's Prisma connection, which by
--- default uses a superuser role that bypasses RLS entirely — see
+-- default uses a superuser role that bypasses RLS entirely - see
 -- .env.example) would plausibly need to write directly: collaborative
 -- content (agents, conversations, knowledge bases, documents) and
 -- self-service settings (memberships, invitations, api keys, webhook
@@ -100,7 +100,7 @@ CREATE POLICY invitations_delete ON invitations
   );
 
 -- ─── Agents ──────────────────────────────────────────────────────────────
--- Mirrors agents_select's scoping (any active org member) — the app-layer
+-- Mirrors agents_select's scoping (any active org member) - the app-layer
 -- can(user, "agents:create"/"agents:update") RBAC check is the primary
 -- gate; this is defense-in-depth, not a replacement for it.
 DROP POLICY IF EXISTS agents_insert ON agents;
@@ -147,7 +147,7 @@ CREATE POLICY conversations_delete ON conversations
   );
 
 -- ─── Messages ────────────────────────────────────────────────────────────
--- INSERT only — chat history is treated as append-only/immutable once
+-- INSERT only - chat history is treated as append-only/immutable once
 -- written, matching normal chat-product semantics (no user-facing "edit a
 -- past message" feature exists in the app).
 DROP POLICY IF EXISTS messages_insert ON messages;
@@ -203,7 +203,7 @@ CREATE POLICY documents_delete ON documents
     )
   );
 
--- Embeddings: insert/delete (regenerate-by-replace), no update — chunks are
+-- Embeddings: insert/delete (regenerate-by-replace), no update - chunks are
 -- write-once, re-chunking deletes and re-inserts rather than editing in place.
 DROP POLICY IF EXISTS embeddings_insert ON embeddings;
 CREATE POLICY embeddings_insert ON embeddings
@@ -228,7 +228,7 @@ CREATE POLICY embeddings_delete ON embeddings
   );
 
 -- ─── API keys ────────────────────────────────────────────────────────────
--- Users manage their own keys. No UPDATE policy — keys are revoked
+-- Users manage their own keys. No UPDATE policy - keys are revoked
 -- (status change) by the owner, matching api_keys_select's "own keys or
 -- OWNER" scoping; revocation goes through the same actor set as delete.
 DROP POLICY IF EXISTS api_keys_insert ON api_keys;
@@ -294,7 +294,7 @@ CREATE POLICY webhook_endpoints_delete ON webhook_endpoints
   );
 
 -- ─── File assets ─────────────────────────────────────────────────────────
--- Insert/delete by org members (upload / remove an upload). No UPDATE —
+-- Insert/delete by org members (upload / remove an upload). No UPDATE -
 -- file metadata is treated as immutable once written; replacing a file
 -- means uploading a new asset, not editing the row.
 DROP POLICY IF EXISTS file_assets_insert ON file_assets;
@@ -307,7 +307,7 @@ CREATE POLICY file_assets_delete ON file_assets
 
 -- ─── Data requests ───────────────────────────────────────────────────────
 -- A user may file their own GDPR export/deletion request directly. No
--- UPDATE/DELETE for end users — status transitions (PENDING → COMPLETED)
+-- UPDATE/DELETE for end users - status transitions (PENDING → COMPLETED)
 -- are written by the app's server-side GDPR logic (lib/gdpr/), and request
 -- records shouldn't be editable/removable by the user who filed them
 -- (that would undermine the audit trail these exist to provide).

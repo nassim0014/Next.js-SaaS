@@ -1,6 +1,6 @@
 * @nassim0014
 
-# Security-sensitive paths — require maintainer review
+# Security-sensitive paths - require maintainer review
 /src/lib/crypto.ts              @nassim0014
 /src/lib/auth/                  @nassim0014
 /src/lib/billing/               @nassim0014

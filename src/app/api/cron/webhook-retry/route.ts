@@ -5,14 +5,14 @@ import { signWebhook } from "@/lib/webhooks/signer";
 import { safeCompare } from "@/lib/crypto";
 
 /**
- * Cron job — retries failed outbound webhook deliveries.
+ * Cron job - retries failed outbound webhook deliveries.
  *
  * Runs every 5 min via Vercel Cron / Cloudflare Cron.
  * Schedule expression: "0-59/5 * * * *" (every 5 minutes)
  */
 
 // getEventsForRetry() can return up to 50 events, each delivered with a 10s
-// fetch timeout. Processed one at a time that's up to 500s of wall time —
+// fetch timeout. Processed one at a time that's up to 500s of wall time -
 // past typical serverless function limits, killing the batch mid-loop and
 // starving whatever was left in the tail. Bounded concurrency (mirrors
 // dispatcher.ts's Promise.allSettled fan-out, but capped rather than fully
@@ -49,7 +49,7 @@ async function retryOne(event: RetryEvent): Promise<RetryOutcome> {
       signal: AbortSignal.timeout(10_000),
     });
 
-    // A response was obtained (ok or not) — counts toward "retried", same
+    // A response was obtained (ok or not) - counts toward "retried", same
     // as before this refactor. A thrown/timed-out attempt (below) does not.
     if (response.ok) {
       await prisma.webhookEvent.update({
@@ -75,7 +75,7 @@ async function retryOne(event: RetryEvent): Promise<RetryOutcome> {
     // Schedule the next attempt with exponential backoff, or mark the
     // event permanently failed once MAX_ATTEMPTS is exceeded. Without
     // this, nextRetryAt keeps its stale past value and getEventsForRetry()
-    // re-selects the event on every 5-minute tick forever — no backoff,
+    // re-selects the event on every 5-minute tick forever - no backoff,
     // no cutoff. Mirrors dispatcher.ts's deliver().
     await scheduleRetry(event.id);
     return { retried: true, succeeded: false };

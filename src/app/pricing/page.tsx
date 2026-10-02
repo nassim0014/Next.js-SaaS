@@ -17,12 +17,12 @@ const FAQ = [
   {
     question: "Can I switch plans later?",
     answer:
-      "Yes — upgrade or downgrade anytime from your dashboard's billing settings. Changes are prorated automatically via Stripe.",
+      "Yes - upgrade or downgrade anytime from your dashboard's billing settings. Changes are prorated automatically via Stripe.",
   },
   {
     question: "What happens if I go over my token quota?",
     answer:
-      "You'll get an alert at 80% and 100% of your monthly quota. Usage past that is billed as metered overage, not a hard cutoff — your app keeps working.",
+      "You'll get an alert at 80% and 100% of your monthly quota. Usage past that is billed as metered overage, not a hard cutoff - your app keeps working.",
   },
   {
     question: "Is this a subscription to your service, or code I own?",
@@ -30,7 +30,7 @@ const FAQ = [
       "It's a boilerplate you clone and deploy yourself, on your own Supabase and hosting accounts. The plans above describe what buyers typically charge their own end users, not a fee you pay us monthly.",
   },
   {
-    question: "MIT or Commercial license — which do I need?",
+    question: "MIT or Commercial license - which do I need?",
     answer:
       "MIT is free for personal/learning/open-source use. A Commercial license is required if you sell a product built on this or use it internally at a company with more than 5 developers.",
   },

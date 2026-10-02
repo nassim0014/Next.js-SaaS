@@ -1,4 +1,4 @@
-# MCP Setup Guide — Complete Walkthrough
+# MCP Setup Guide - Complete Walkthrough
 
 > This is your first time using MCP? You're in the right place.
 > 15 minutes from zero to live AI-tooled development.
@@ -23,7 +23,7 @@ The boilerplate ships with three MCP servers pre-configured:
 
 ---
 
-## Step 1 — Pick your editor (pick ONE)
+## Step 1 - Pick your editor (pick ONE)
 
 | Editor | MCP support | Recommended for |
 |---|---|---|
@@ -36,7 +36,7 @@ The next steps assume **Cursor** (most popular, easiest setup). Differences for 
 
 ---
 
-## Step 2 — Install Cursor
+## Step 2 - Install Cursor
 
 1. Download from https://cursor.com/download (Mac, Windows, Linux)
 2. Open the installer, drag to Applications (Mac) or run the .exe (Windows)
@@ -44,7 +44,7 @@ The next steps assume **Cursor** (most popular, easiest setup). Differences for 
 
 ---
 
-## Step 3 — Open the boilerplate project
+## Step 3 - Open the boilerplate project
 
 1. After I push the code to GitHub (Phase 3), you'll clone it:
    ```bash
@@ -62,9 +62,9 @@ If Cursor doesn't auto-prompt:
 
 ---
 
-## Step 4 — Authorize the HTTP-based servers
+## Step 4 - Authorize the HTTP-based servers
 
-The `next-devtools` server is **stdio-based** — Cursor spawns it via `npx` automatically. No auth needed.
+The `next-devtools` server is **stdio-based** - Cursor spawns it via `npx` automatically. No auth needed.
 
 The `supabase` and `Prisma` servers are **HTTP-based** and require OAuth:
 
@@ -74,13 +74,13 @@ The `supabase` and `Prisma` servers are **HTTP-based** and require OAuth:
 4. `Prisma` → click "Authenticate" → browser opens → sign in to Prisma Data Platform → authorize
 5. All three show green ✅
 
-**First-time Supabase auth:** you'll be asked to pick which Supabase project to expose to MCP. Select your boilerplate project. The token is scoped — MCP can read schema, run migrations, but cannot delete your project.
+**First-time Supabase auth:** you'll be asked to pick which Supabase project to expose to MCP. Select your boilerplate project. The token is scoped - MCP can read schema, run migrations, but cannot delete your project.
 
 **First-time Prisma auth:** sign in with the same account you use for prisma.io. If you don't have one, create it (free).
 
 ---
 
-## Step 5 — For other editors
+## Step 5 - For other editors
 
 ### VS Code + Cline
 
@@ -110,7 +110,7 @@ Claude Desktop uses a **global** config (not project-level):
 
 ---
 
-## Step 6 — Verify it works
+## Step 6 - Verify it works
 
 Open Cursor's chat (`Cmd/Ctrl + L`), switch model to **Claude 3.5 Sonnet** or **GPT-4o** (MCP tools work best on capable models), and try:
 
@@ -133,7 +133,7 @@ If you get answers that reference real data from your project, MCP is live.
 
 ---
 
-## Step 7 — Daily workflow with MCP
+## Step 7 - Daily workflow with MCP
 
 Once set up, MCP servers stay on for every Cursor session in this project. Typical flows:
 
@@ -141,7 +141,7 @@ Once set up, MCP servers stay on for every Cursor session in this project. Typic
 - **"Check why /api/chat is failing"** → next-devtools inspects the route + middleware
 - **"Show me users created in the last 24h"** → supabase MCP runs a SQL query
 
-You don't need MCP to develop on this boilerplate — it's a power-user accelerator. The boilerplate works 100% with plain `pnpm dev` and a normal editor.
+You don't need MCP to develop on this boilerplate - it's a power-user accelerator. The boilerplate works 100% with plain `pnpm dev` and a normal editor.
 
 ---
 
@@ -161,10 +161,10 @@ You don't need MCP to develop on this boilerplate — it's a power-user accelera
 
 To set expectations honestly:
 
-- MCP servers don't write code by themselves — they give your AI *information* about your project. The AI still writes the code in your editor.
-- MCP servers don't run in production — they're dev-time only. The `.mcp.json` file is gitignored from production builds.
+- MCP servers don't write code by themselves - they give your AI *information* about your project. The AI still writes the code in your editor.
+- MCP servers don't run in production - they're dev-time only. The `.mcp.json` file is gitignored from production builds.
 - The boilerplate works fully without MCP. MCP is an *accelerator* for ongoing development, not a dependency.
 
 ---
 
-**Next:** Once Phase 3 ships the code, come back here and run through Steps 1–6. You'll be AI-tooled in under 15 minutes.
+**Next:** Once Phase 3 ships the code, come back here and run through Steps 1-6. You'll be AI-tooled in under 15 minutes.

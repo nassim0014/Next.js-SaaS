@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { dispatchWebhookEvent } from "@/lib/webhooks/dispatcher";
 
 /**
- * ⭐ AI COST OBSERVABILITY — THE 5TH USP
+ * ⭐ AI COST OBSERVABILITY - THE 5TH USP
  *
  * Every LLM call is metered and attributed to org + user + conversation + model.
  * This module powers:
@@ -11,7 +11,7 @@ import { dispatchWebhookEvent } from "@/lib/webhooks/dispatcher";
  *   - Usage-based billing (overage priced per 1K tokens)
  *
  * No AI SaaS boilerplate ships this out of the box.
- * Founders get burned by token bills because they can't see them — we fix that.
+ * Founders get burned by token bills because they can't see them - we fix that.
  */
 
 export type RecordTokenUsageInput = {
@@ -27,7 +27,7 @@ export type RecordTokenUsageInput = {
 };
 
 /**
- * Insert a TokenUsage row. Fire-and-forget from the caller's perspective —
+ * Insert a TokenUsage row. Fire-and-forget from the caller's perspective -
  * should never throw or block the chat stream.
  */
 export async function recordTokenUsage(input: RecordTokenUsageInput): Promise<void> {
@@ -70,7 +70,7 @@ export async function checkBudget(organizationId: string): Promise<void> {
   if (subscription) {
     quota = subscription.plan.tokenQuota;
   } else {
-    // No subscription — fall back to the Free plan quota (50K tokens/month).
+    // No subscription - fall back to the Free plan quota (50K tokens/month).
     // This lets new/trial users chat before billing is set up.
     const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
     quota = freePlan?.tokenQuota ?? 50_000;
@@ -84,7 +84,7 @@ export async function checkBudget(organizationId: string): Promise<void> {
     throw new Error("BUDGET_EXCEEDED");
   }
 
-  // Fire 80% / 100% alerts — dispatched as a "usage.budget_threshold"
+  // Fire 80% / 100% alerts - dispatched as a "usage.budget_threshold"
   // webhook event (see alertBudgetThreshold below). The check happens here;
   // the alert dispatch happens async.
   if (usage.totalTokens >= quota * 0.8) {
@@ -290,10 +290,10 @@ export async function getModelUsageBreakdown(
 /**
  * Dispatch a "usage.budget_threshold" webhook event to every endpoint the
  * org has subscribed to it (see lib/webhooks/dispatcher.ts). Orgs opt in the
- * same way they do for any other event — WebhookEndpoint.events is a plain
+ * same way they do for any other event - WebhookEndpoint.events is a plain
  * string array, there's no central registry to register this event type in.
  *
- * Never throws — checkBudget() already wraps this call in `.catch(() =>
+ * Never throws - checkBudget() already wraps this call in `.catch(() =>
  * null)`, but guard here too since a failed alert must never block the
  * chat stream that triggered it.
  */
@@ -321,7 +321,7 @@ async function alertBudgetThreshold(
 }
 
 /**
- * Exported for direct unit testing (pure functions, no I/O) — also used
+ * Exported for direct unit testing (pure functions, no I/O) - also used
  * internally by getCurrentPeriodUsage() as the fallback billing period when
  * an org has no subscription row yet.
  */

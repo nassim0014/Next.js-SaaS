@@ -10,7 +10,7 @@ export type ExportState = { error?: string; downloadUrl?: string; expiresAt?: st
 export type DeletionState = { error?: string; deleted?: boolean };
 
 /**
- * "Request Export" — GDPR right to access.
+ * "Request Export" - GDPR right to access.
  * Wires the compliance page's Export button to the already-implemented
  * exportUserData() (produces a ZIP, see lib/gdpr/export.ts).
  */
@@ -30,10 +30,10 @@ export async function requestExportAction(
 }
 
 /**
- * "Request Deletion" — GDPR right to erasure.
+ * "Request Deletion" - GDPR right to erasure.
  * Wires the compliance page's Delete button to the already-implemented
  * deleteUserData(). The client component gates this behind a confirmation
- * prompt before ever submitting — this action assumes that already happened.
+ * prompt before ever submitting - this action assumes that already happened.
  */
 export async function requestDeletionAction(
   _prevState: DeletionState,

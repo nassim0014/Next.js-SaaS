@@ -4,14 +4,14 @@ import { rollupCurrentPeriod } from "@/lib/billing/metering";
 import { safeCompare } from "@/lib/crypto";
 
 /**
- * Cron job — rolls up token usage into UsageRecord for every org.
+ * Cron job - rolls up token usage into UsageRecord for every org.
  *
  * Runs nightly via Vercel Cron / Cloudflare Cron / GitHub Actions:
  *
  *   # vercel.json
  *   "crons": [{ "path": "/api/cron/usage-meter", "schedule": "0 0 * * *" }]
  *
- * Protected by CRON_SECRET — set in .env.local.
+ * Protected by CRON_SECRET - set in .env.local.
  */
 export async function GET(req: NextRequest) {
   // Verify the cron secret using constant-time comparison (prevents timing attacks)

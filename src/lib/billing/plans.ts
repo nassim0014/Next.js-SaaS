@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 /**
- * Plan definitions — the single source of truth for plan features.
+ * Plan definitions - the single source of truth for plan features.
  *
  * This file is mirrored in the `Plan` table (seeded by `prisma/seed.ts`).
  * When changing plans, update BOTH this file AND the seed.
@@ -41,7 +41,7 @@ export const PLANS: Record<PlanSlug, PlanDefinition> = {
       "1 agent",
       "Community support",
     ],
-    // No Stripe price — the Free plan is never purchased through Stripe.
+    // No Stripe price - the Free plan is never purchased through Stripe.
   },
   starter: {
     slug: "starter",
@@ -104,7 +104,7 @@ export const PLANS: Record<PlanSlug, PlanDefinition> = {
       "SLA + dedicated support",
       "On-prem deployment option",
     ],
-    // Contact-sales plan — no self-serve Stripe price, subscriptions are
+    // Contact-sales plan - no self-serve Stripe price, subscriptions are
     // reconciled manually.
   },
 };
@@ -133,7 +133,7 @@ export function listPlans(): PlanDefinition[] {
  *
  * Used by lib/billing/webhooks.ts reconcileSubscription() so a new
  * subscription is created against the real plan instead of a placeholder.
- * Returns null if no seeded Plan matches — callers must treat that as a
+ * Returns null if no seeded Plan matches - callers must treat that as a
  * hard error (misconfiguration), not silently default to some other plan.
  */
 export async function getPlanByStripePriceId(priceId: string) {

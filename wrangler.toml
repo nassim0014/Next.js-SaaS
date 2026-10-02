@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 # Pages configuration
 pages_build_output_dir = ".open-next"
 
-# Cron triggers — fire at /api/cron/* with Authorization: Bearer <CRON_SECRET>
+# Cron triggers - fire at /api/cron/* with Authorization: Bearer <CRON_SECRET>
 [triggers]
 crons = [
   "0 0 * * *",       # Daily at midnight UTC → usage-meter
@@ -13,7 +13,7 @@ crons = [
 ]
 
 # Environment variables are set in the Cloudflare dashboard (or via `wrangler secret put`).
-# Do NOT put secrets in this file — it is committed to git.
+# Do NOT put secrets in this file - it is committed to git.
 
 # [vars]
 # NEXT_PUBLIC_APP_NAME = "Next.js SaaS"

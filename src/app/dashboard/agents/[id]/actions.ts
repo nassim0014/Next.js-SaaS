@@ -13,7 +13,7 @@ export async function updateAgentAction(formData: FormData): Promise<void> {
   const session = await requireUser();
   const orgId = await requireActiveOrgId();
 
-  // RBAC check — only ADMIN+ can edit agents
+  // RBAC check - only ADMIN+ can edit agents
   const membership = await prisma.membership.findUnique({
     where: { userId_organizationId: { userId: session.user.id, organizationId: orgId } },
   });

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /**
- * Next.js App Router convention — automatically wraps this route segment in
+ * Next.js App Router convention - automatically wraps this route segment in
  * a Suspense boundary with this as the fallback while dashboard/page.tsx's
  * server-side data fetching (agent/conversation counts, usage) resolves.
  * Shaped to match that page's actual layout instead of a generic spinner.

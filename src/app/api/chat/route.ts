@@ -11,7 +11,7 @@ import { AppError, toAppError } from "@/lib/errors";
 import { z } from "zod";
 
 /**
- * Chat API — streaming endpoint compatible with @ai-sdk/react useChat().
+ * Chat API - streaming endpoint compatible with @ai-sdk/react useChat().
  *
  * The useChat() hook sends:
  *   POST /api/chat
@@ -39,12 +39,12 @@ export async function POST(req: NextRequest) {
     const orgId = await getActiveOrgId();
     if (!orgId) throw new AppError("NO_ACTIVE_ORG");
 
-    // 0. Rate limit — throws AppError("RATE_LIMITED") → HTTP 429.
+    // 0. Rate limit - throws AppError("RATE_LIMITED") → HTTP 429.
     //
     // Deliberately the first thing after the org is known, ahead of body
     // parsing and every query below: checkBudget() (step 5) caps monthly
     // spend, but without a rate cap a runaway client burns that whole budget
-    // in minutes. Cheapest possible rejection — one atomic counter write.
+    // in minutes. Cheapest possible rejection - one atomic counter write.
     await enforceChatRateLimit(orgId);
 
     const body = await req.json();
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
       return { role: "assistant" as const, content: m.content };
     });
 
-    // 5. Budget check — throws if org exceeded quota
+    // 5. Budget check - throws if org exceeded quota
     await checkBudget(orgId);
 
     // 6. Resolve the LLM model
@@ -204,10 +204,10 @@ export async function POST(req: NextRequest) {
     // `ai` v7 dropped `toDataStreamResponse()` (the old `x-vercel-ai-data-stream`
     // protocol) in favor of `toUIMessageStreamResponse()`, a new SSE-based wire
     // format that only `@ai-sdk/react` v2+'s useChat() understands. This app is
-    // still on `@ai-sdk/react` ^1.0.0 (its useChat() predates that rewrite —
+    // still on `@ai-sdk/react` ^1.0.0 (its useChat() predates that rewrite -
     // see chat-interface.tsx, which uses the old input/handleSubmit/isLoading
-    // API), so `toTextStreamResponse()` — a plain incremental text/plain stream
-    // — is the response shape that actually matches `streamProtocol: "text"`
+    // API), so `toTextStreamResponse()` - a plain incremental text/plain stream
+    // - is the response shape that actually matches `streamProtocol: "text"`
     // on the client. Bumping to the new protocol would require migrating
     // chat-interface.tsx to the v2 useChat() API too; out of scope here.
     return result.toTextStreamResponse();

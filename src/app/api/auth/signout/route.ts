@@ -3,7 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 /**
- * Sign out — clears the Supabase session and cookies.
+ * Sign out - clears the Supabase session and cookies.
  */
 export async function POST() {
   const supabase = await supabaseServer();

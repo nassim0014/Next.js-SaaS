@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Zod validators — the single source of truth for input shapes.
+ * Zod validators - the single source of truth for input shapes.
  *
  * Re-use these everywhere: client forms, server actions, API routes.
  * Never redefine validation inline.

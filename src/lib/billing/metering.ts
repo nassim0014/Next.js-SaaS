@@ -3,14 +3,14 @@ import { getCurrentPeriodUsage } from "@/lib/ai/cost";
 import type { PlanSlug } from "./plans";
 
 /**
- * Metering — read UsageRecord, enforce quotas, roll up daily/monthly.
+ * Metering - read UsageRecord, enforce quotas, roll up daily/monthly.
  *
  * Called by /api/cron/usage-meter (runs nightly).
  */
 
 /**
  * Roll up the current period's token usage into a UsageRecord.
- * Idempotent — uses a unique constraint on [organizationId, metric, periodStart].
+ * Idempotent - uses a unique constraint on [organizationId, metric, periodStart].
  */
 export async function rollupCurrentPeriod(organizationId: string): Promise<void> {
   const usage = await getCurrentPeriodUsage(organizationId);

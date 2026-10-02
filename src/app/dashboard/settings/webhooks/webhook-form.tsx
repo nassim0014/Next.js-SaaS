@@ -15,7 +15,7 @@ export function WebhookForm() {
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
-    if (state.secret) toast.success("Webhook endpoint created! Copy the signing secret now — you won't see it again.");
+    if (state.secret) toast.success("Webhook endpoint created! Copy the signing secret now - you won't see it again.");
   }, [state]);
 
   return (
