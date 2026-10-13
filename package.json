@@ -89,7 +89,7 @@
     "eslint-config-next": "^16.3.8",
     "eslint-plugin-no-only-tests": "^3.3.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
+    "lint-staged": "^17.6.0",
     "postcss": "^8.5.26",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
