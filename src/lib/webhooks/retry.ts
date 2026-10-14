@@ -32,7 +32,13 @@ export async function scheduleRetry(webhookEventId: string): Promise<void> {
 
   if (!event) return;
 
-  if (event.attempts >= MAX_ATTEMPTS) {
+  if (event.attempts > MAX_ATTEMPTS) {
+    // `attempts` is already incremented by the caller before this runs, so
+    // attempts === MAX_ATTEMPTS means "the Nth failure just happened" and
+    // the Nth (last) retry interval below still needs to be scheduled.
+    // Giving up here instead (the old `>=` check) skipped that last
+    // interval, cutting the documented "1m, 5m, 30m, 2h, 6h, 24h, give up"
+    // schedule short by one retry.
     // Permanently failed - admin should investigate
     await prisma.webhookEvent.update({
       where: { id: webhookEventId },
@@ -45,7 +51,8 @@ export async function scheduleRetry(webhookEventId: string): Promise<void> {
     return;
   }
 
-  const baseInterval: number = RETRY_INTERVALS_MS[event.attempts - 1] ?? RETRY_INTERVALS_MS[0] ?? 60_000;
+  const baseInterval: number =
+    RETRY_INTERVALS_MS[event.attempts - 1] ?? RETRY_INTERVALS_MS[0] ?? 60_000;
   // Jitter: ±20% of the interval
   const jitter = (Math.random() - 0.5) * 0.4 * baseInterval;
   const nextRetryAt = new Date(Date.now() + baseInterval + jitter);
